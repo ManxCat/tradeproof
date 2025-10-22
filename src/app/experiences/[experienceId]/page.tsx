@@ -22,9 +22,9 @@ export default async function ExperiencePage({
     .orderBy(desc(trades.createdAt));
 
   // Calculate dashboard stats
-  const totalPnl = allTrades.reduce((sum, t) => sum + t.pnl, 0);
+  const totalPnl = allTrades.reduce((sum, t) => sum + parseFloat(t.pnl), 0);
   const totalTrades = allTrades.length;
-  const winningTrades = allTrades.filter(t => t.pnl > 0).length;
+  const winningTrades = allTrades.filter(t => parseFloat(t.pnl) > 0).length;
   const avgWinRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
 
   // Get today's trades
@@ -49,9 +49,9 @@ export default async function ExperiencePage({
     }
     
     const stats = traderStats.get(trade.userId);
-    stats.totalPnl += trade.pnl;
+    stats.totalPnl += parseFloat(trade.pnl);
     stats.totalTrades += 1;
-    if (trade.pnl > 0) stats.winningTrades += 1;
+    if (parseFloat(trade.pnl) > 0) stats.winningTrades += 1;
   });
 
   // Convert to array and calculate win rates
@@ -145,11 +145,11 @@ export default async function ExperiencePage({
                   </div>
                   
                   <div className="text-right">
-                    <p className={`text-2xl font-bold ${trade.pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      ${trade.pnl >= 0 ? '+' : ''}{trade.pnl.toFixed(2)}
+                    <p className={`text-2xl font-bold ${parseFloat(trade.pnl) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      ${parseFloat(trade.pnl) >= 0 ? '+' : ''}{parseFloat(trade.pnl).toFixed(2)}
                     </p>
-                    <p className={`text-sm ${trade.roi >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {trade.roi.toFixed(2)}% ROI
+                    <p className={`text-sm ${parseFloat(trade.roi) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {parseFloat(trade.roi).toFixed(2)}% ROI
                     </p>
                   </div>
                 </div>
