@@ -16,7 +16,6 @@
     "@whop-apps/dev-proxy": "^0.0.1-canary.117",
     "@whop-apps/sdk": "^0.0.1-canary.117",
     "@whop/api": "^0.0.51",
-    "better-sqlite3": "^12.4.1",
     "drizzle-orm": "^0.44.6",
     "nanoid": "^5.1.6",
     "next": "14.2.15",
@@ -26,9 +25,8 @@
     "recharts": "^3.3.0",
     "zod": "^4.1.11"
   },
-   "devDependencies": {
+  "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
