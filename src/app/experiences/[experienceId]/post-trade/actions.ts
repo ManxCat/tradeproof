@@ -24,18 +24,18 @@ export async function submitTrade(formData: FormData, experienceId: string) {
   const pnl = (priceDiff / entryPrice) * positionSize;
   const roi = (priceDiff / entryPrice) * 100;
 
-  // Insert trade into database
+  // Insert trade into database (convert numbers to strings for Postgres numeric type)
   await db.insert(trades).values({
     id: nanoid(),
     experienceId,
     userId,
     symbol,
-    entryPrice,
-    exitPrice,
-    positionSize,
-    pnl,
-    roi,
-    status: 'approved', // Auto-approve for now
+    entryPrice: entryPrice.toString(),
+    exitPrice: exitPrice.toString(),
+    positionSize: positionSize.toString(),
+    pnl: pnl.toString(),
+    roi: roi.toString(),
+    status: 'approved',
     screenshot: null,
   });
 
