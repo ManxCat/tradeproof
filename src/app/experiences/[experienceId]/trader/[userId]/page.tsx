@@ -28,23 +28,23 @@ export default async function TraderProfilePage({
     .orderBy(desc(trades.createdAt));
 
   const totalTrades = traderTrades.length;
-  const totalPnl = traderTrades.reduce((sum, t) => sum + t.pnl, 0);
-  const winningTrades = traderTrades.filter(t => t.pnl > 0).length;
-  const losingTrades = traderTrades.filter(t => t.pnl < 0).length;
+  const totalPnl = traderTrades.reduce((sum, t) => sum + parseFloat(t.pnl), 0);
+  const winningTrades = traderTrades.filter(t => parseFloat(t.pnl) > 0).length;
+  const losingTrades = traderTrades.filter(t => parseFloat(t.pnl) < 0).length;
   const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
   const avgPnl = totalTrades > 0 ? totalPnl / totalTrades : 0;
-  const bestTrade = traderTrades.length > 0 ? Math.max(...traderTrades.map(t => t.pnl)) : 0;
-  const worstTrade = traderTrades.length > 0 ? Math.min(...traderTrades.map(t => t.pnl)) : 0;
+  const bestTrade = traderTrades.length > 0 ? Math.max(...traderTrades.map(t => parseFloat(t.pnl))) : 0;
+  const worstTrade = traderTrades.length > 0 ? Math.min(...traderTrades.map(t => parseFloat(t.pnl))) : 0;
 
   let currentStreak = 0;
   let streakType: 'win' | 'loss' | null = null;
   for (const trade of traderTrades) {
-    if (trade.pnl > 0) {
+    if (parseFloat(trade.pnl) > 0) {
       if (streakType === 'win' || streakType === null) {
         currentStreak++;
         streakType = 'win';
       } else break;
-    } else if (trade.pnl < 0) {
+    } else if (parseFloat(trade.pnl) < 0) {
       if (streakType === 'loss' || streakType === null) {
         currentStreak++;
         streakType = 'loss';
@@ -53,10 +53,10 @@ export default async function TraderProfilePage({
   }
 
   const chartData = traderTrades.slice().reverse().map((trade, index, arr) => {
-    const cumulative = arr.slice(0, index + 1).reduce((sum, t) => sum + t.pnl, 0);
+    const cumulative = arr.slice(0, index + 1).reduce((sum, t) => sum + parseFloat(t.pnl), 0);
     return {
       date: new Date(trade.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      pnl: trade.pnl,
+      pnl: parseFloat(trade.pnl),
       cumulative: cumulative
     };
   });
@@ -70,12 +70,12 @@ export default async function TraderProfilePage({
   
   if (traderTrades.length >= 100) achievements.push('century_club');
   
-  if (traderTrades.some(t => t.positionSize >= 10000)) achievements.push('whale');
+  if (traderTrades.some(t => parseFloat(t.positionSize) >= 10000)) achievements.push('whale');
   
   let maxWinStreak = 0;
   let winStreakCount = 0;
   for (const trade of traderTrades) {
-    if (trade.pnl > 0) {
+    if (parseFloat(trade.pnl) > 0) {
       winStreakCount++;
       maxWinStreak = Math.max(maxWinStreak, winStreakCount);
     } else {
@@ -208,11 +208,11 @@ export default async function TraderProfilePage({
             <div className="space-y-3">
               {traderTrades.map((trade, index) => {
                 let streakCount = 1;
-                let tradeStreakType: 'win' | 'loss' = trade.pnl > 0 ? 'win' : 'loss';
+                let tradeStreakType: 'win' | 'loss' = parseFloat(trade.pnl) > 0 ? 'win' : 'loss';
                 
                 for (let i = index - 1; i >= 0; i--) {
                   const prevTrade = traderTrades[i];
-                  if ((tradeStreakType === 'win' && prevTrade.pnl > 0) || (tradeStreakType === 'loss' && prevTrade.pnl < 0)) {
+                  if ((tradeStreakType === 'win' && parseFloat(prevTrade.pnl) > 0) || (tradeStreakType === 'loss' && parseFloat(prevTrade.pnl) < 0)) {
                     streakCount++;
                   } else {
                     break;
@@ -226,9 +226,9 @@ export default async function TraderProfilePage({
                   >
                     <div className="flex items-center gap-4">
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl ${
-                        trade.pnl >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'
+                        parseFloat(trade.pnl) >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'
                       }`}>
-                        {trade.pnl >= 0 ? '✅' : '❌'}
+                        {parseFloat(trade.pnl) >= 0 ? '✅' : '❌'}
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
@@ -236,7 +236,7 @@ export default async function TraderProfilePage({
                           <StreakBadge streak={streakCount} type={tradeStreakType} size="sm" />
                         </div>
                         <p className="text-sm text-gray-400">
-                          ${trade.entryPrice} → ${trade.exitPrice} • ${trade.positionSize.toFixed(0)} position
+                          ${trade.entryPrice} → ${trade.exitPrice} • ${parseFloat(trade.positionSize).toFixed(0)} position
                         </p>
                         <p className="text-xs text-gray-500">
                           {new Date(trade.createdAt).toLocaleDateString()}
@@ -245,11 +245,11 @@ export default async function TraderProfilePage({
                     </div>
                     
                     <div className="text-right">
-                      <p className={`text-2xl font-bold ${trade.pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                        ${trade.pnl >= 0 ? '+' : ''}{trade.pnl.toFixed(2)}
+                      <p className={`text-2xl font-bold ${parseFloat(trade.pnl) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        ${parseFloat(trade.pnl) >= 0 ? '+' : ''}{parseFloat(trade.pnl).toFixed(2)}
                       </p>
-                      <p className={`text-sm ${trade.roi >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {trade.roi.toFixed(2)}% ROI
+                      <p className={`text-sm ${parseFloat(trade.roi) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {parseFloat(trade.roi).toFixed(2)}% ROI
                       </p>
                     </div>
                   </div>
