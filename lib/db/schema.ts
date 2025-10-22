@@ -1,39 +1,36 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { pgTable, text, integer, numeric, timestamp } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
-// Helper for timestamps
 export const timestamps = {
-  createdAt: integer('created_at', { mode: 'timestamp' })
+  createdAt: timestamp('created_at')
     .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: integer('updated_at', { mode: 'timestamp' })
+    .default(sql`now()`),
+  updatedAt: timestamp('updated_at')
     .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
+    .default(sql`now()`),
 };
 
-// Trades table
-export const trades = sqliteTable('trades', {
+export const trades = pgTable('trades', {
   id: text('id').primaryKey(),
   experienceId: text('experience_id').notNull(),
   userId: text('user_id').notNull(),
   symbol: text('symbol').notNull(),
-  entryPrice: real('entry_price').notNull(),
-  exitPrice: real('exit_price').notNull(),
-  positionSize: real('position_size').notNull(),
-  pnl: real('pnl').notNull(),
-  roi: real('roi').notNull(),
+  entryPrice: numeric('entry_price').notNull(),
+  exitPrice: numeric('exit_price').notNull(),
+  positionSize: numeric('position_size').notNull(),
+  pnl: numeric('pnl').notNull(),
+  roi: numeric('roi').notNull(),
   screenshot: text('screenshot'),
-  status: text('status').notNull().default('pending'), // pending, approved, rejected
+  status: text('status').notNull().default('pending'),
   ...timestamps,
 });
 
-// Members stats table
-export const members = sqliteTable('members', {
+export const members = pgTable('members', {
   id: text('id').primaryKey(),
   experienceId: text('experience_id').notNull(),
   userId: text('user_id').notNull(),
   username: text('username').notNull(),
-  totalPnl: real('total_pnl').notNull().default(0),
+  totalPnl: numeric('total_pnl').notNull().default('0'),
   totalTrades: integer('total_trades').notNull().default(0),
   winningTrades: integer('winning_trades').notNull().default(0),
   ...timestamps,
