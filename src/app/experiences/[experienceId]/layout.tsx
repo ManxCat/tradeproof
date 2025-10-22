@@ -6,12 +6,13 @@ import {
   whopUserQuery,
 } from '~/components/whop-context/whop-queries'
 
-
-
 export default async function ExperienceLayout({
   children,
   params,
-}: LayoutProps<'/experience/[experienceId]'>) {
+}: {
+  children: React.ReactNode
+  params: Promise<{ experienceId: string }>
+}) {
   const { experienceId } = await params
 
   serverQueryClient.prefetchQuery(whopExperienceQuery(experienceId))
