@@ -6,7 +6,7 @@ import {
   whopUserQuery,
 } from '~/components/whop-context/whop-queries'
 
-export const experimental_ppr = true
+
 
 export default async function ExperienceLayout({
   children,
