@@ -23,7 +23,7 @@ export const verifyUser = cache(
       throw new Error('Admin access required');
     }
 
-    if (accessLevel === 'no_access') {
+    if (accessLevel !== 'admin') {
       throw new Error('No access to this experience');
     }
 
