@@ -6,12 +6,8 @@ const nextConfig = {
         source: '/:path*',
         headers: [
           {
-            key: 'X-Frame-Options',
-            value: 'ALLOW-FROM https://whop.com',
-          },
-          {
             key: 'Content-Security-Policy',
-            value: "frame-ancestors 'self' https://whop.com https://*.whop.com",
+            value: "frame-ancestors https://whop.com https://*.whop.com",
           },
         ],
       },
