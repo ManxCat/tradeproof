@@ -1,5 +1,6 @@
 import { cache } from 'react';
 import { headers } from 'next/headers';
+import { whopSdk } from './whop-sdk';
 
 type AccessLevel = 'admin' | 'member' | 'no_access';
 
@@ -14,48 +15,27 @@ export const verifyUser = cache(
     try {
       const headersList = await headers();
       
-      // Whop SDK sends user info via these headers when properly configured
-      const whopUserId = headersList.get('x-whop-user-id');
-      const whopToken = headersList.get('authorization')?.replace('Bearer ', '');
+      // Get userId from Whop token in headers
+      const { userId } = await whopSdk.verifyUserToken(headersList);
       
-      let userId = whopUserId || `user-${Math.random().toString(36).substring(7)}`;
-      let username = null;
+      console.log('Got userId from Whop:', userId);
       
-      // If we have a Whop token, fetch user details
-      if (whopToken) {
-        try {
-          const response = await fetch('https://api.whop.com/api/v5/me', {
-            headers: {
-              'Authorization': `Bearer ${whopToken}`,
-            },
-            cache: 'no-store',
-          });
-          
-          if (response.ok) {
-            const userData = await response.json();
-            userId = userData.id || userId;
-            username = userData.username || userData.email?.split('@')[0] || null;
-          }
-        } catch (err) {
-          console.error('Failed to fetch Whop user:', err);
-        }
-      }
+      // Fetch user details
+      const user = await whopSdk.users.getUser({ userId });
       
-      // Everyone can access for now
-      const accessLevel: AccessLevel = 'admin';
-
+      console.log('Got user details:', user);
+      
       return { 
         userId, 
-        username,
-        accessLevel 
+        username: user.username || user.name || null,
+        accessLevel: 'admin' as AccessLevel 
       };
     } catch (error) {
       console.error('Auth error:', error);
+      // Fallback for testing
       return { 
-        userId: `user-${Math.random().toString(36).substring(7)}`,
+        userId: `fallback-${Date.now()}`,
         username: null,
         accessLevel: 'admin' as AccessLevel 
       };
     }
-  }
-);
