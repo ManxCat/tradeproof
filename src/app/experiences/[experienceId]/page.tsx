@@ -23,7 +23,7 @@ export default async function ExperiencePage({
     .where(eq(trades.experienceId, experienceId))
     .orderBy(desc(trades.createdAt));
 
-  // All calculations SERVER-SIDE
+  // All calculations SERVER-SIDE - PARSE STRINGS TO NUMBERS
   const totalPnl = allTrades.reduce((sum, t) => sum + parseFloat(t.pnl), 0);
   const totalTrades = allTrades.length;
   const winningTrades = allTrades.filter(t => parseFloat(t.pnl) > 0).length;
@@ -131,28 +131,35 @@ export default async function ExperiencePage({
             <p className="text-gray-400">No trades yet. Be the first to post!</p>
           ) : (
             <div className="space-y-4">
-              {allTrades.slice(0, 10).map((trade) => (
-                <div 
-                  key={trade.id}
-                  className="bg-gray-800 rounded-lg p-4 flex justify-between items-center"
-                >
-                  <div>
-                    <h3 className="text-xl font-bold">{trade.symbol}</h3>
-                    <p className="text-sm text-gray-400">
-                      ${trade.entryPrice} → ${trade.exitPrice}
-                    </p>
+              {allTrades.slice(0, 10).map((trade) => {
+                const tradePnl = parseFloat(trade.pnl);
+                const tradeRoi = parseFloat(trade.roi);
+                const tradeEntry = parseFloat(trade.entryPrice);
+                const tradeExit = parseFloat(trade.exitPrice);
+                
+                return (
+                  <div 
+                    key={trade.id}
+                    className="bg-gray-800 rounded-lg p-4 flex justify-between items-center"
+                  >
+                    <div>
+                      <h3 className="text-xl font-bold">{trade.symbol}</h3>
+                      <p className="text-sm text-gray-400">
+                        ${tradeEntry.toFixed(2)} → ${tradeExit.toFixed(2)}
+                      </p>
+                    </div>
+                    
+                    <div className="text-right">
+                      <p className={`text-2xl font-bold ${tradePnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        ${tradePnl >= 0 ? '+' : ''}{tradePnl.toFixed(2)}
+                      </p>
+                      <p className={`text-sm ${tradeRoi >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {tradeRoi.toFixed(2)}% ROI
+                      </p>
+                    </div>
                   </div>
-                  
-                  <div className="text-right">
-                    <p className={`text-2xl font-bold ${parseFloat(trade.pnl) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      ${parseFloat(trade.pnl) >= 0 ? '+' : ''}{parseFloat(trade.pnl).toFixed(2)}
-                    </p>
-                    <p className={`text-sm ${parseFloat(trade.roi) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {parseFloat(trade.roi).toFixed(2)}% ROI
-                    </p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
