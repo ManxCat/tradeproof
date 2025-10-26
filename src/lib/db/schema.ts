@@ -14,6 +14,7 @@ export const trades = pgTable('trades', {
   id: text('id').primaryKey(),
   experienceId: text('experience_id').notNull(),
   userId: text('user_id').notNull(),
+  username: text('username'),
   symbol: text('symbol').notNull(),
   entryPrice: numeric('entry_price').notNull(),
   exitPrice: numeric('exit_price').notNull(),

@@ -7,8 +7,8 @@ import { redirect } from 'next/navigation';
 import { nanoid } from 'nanoid';
 
 export async function submitTrade(formData: FormData, experienceId: string) {
-  // Verify user is admin
-  const { userId } = await verifyUser({ 
+  // Verify user and get their info
+  const { userId, username } = await verifyUser({ 
     experienceId,
     requiredAccess: 'admin' 
   });
@@ -24,11 +24,12 @@ export async function submitTrade(formData: FormData, experienceId: string) {
   const pnl = (priceDiff / entryPrice) * positionSize;
   const roi = (priceDiff / entryPrice) * 100;
 
-  // Insert trade into database (convert numbers to strings for Postgres numeric type)
+  // Insert trade into database with username
   await db.insert(trades).values({
     id: nanoid(),
     experienceId,
     userId,
+    username: username || null,
     symbol,
     entryPrice: entryPrice.toString(),
     exitPrice: exitPrice.toString(),
