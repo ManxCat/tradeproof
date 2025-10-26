@@ -42,6 +42,7 @@ export default async function ExperiencePage({
     if (!traderStats.has(trade.userId)) {
       traderStats.set(trade.userId, {
         userId: trade.userId,
+        username: trade.username,
         totalPnl: 0,
         totalTrades: 0,
         winningTrades: 0,
