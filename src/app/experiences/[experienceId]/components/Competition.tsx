@@ -34,9 +34,10 @@ export function Competition({ allTrades, experienceId }: { allTrades: any[]; exp
     }
     
     const stats = statsMap.get(trade.userId);
-    stats.pnl += trade.pnl;
+    const tradePnl = parseFloat(trade.pnl);  // PARSE TO NUMBER!
+    stats.pnl += tradePnl;
     stats.trades += 1;
-    if (trade.pnl > 0) stats.wins += 1;
+    if (tradePnl > 0) stats.wins += 1;
   });
 
   // Create leaderboard
