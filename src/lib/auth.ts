@@ -1,5 +1,5 @@
-import { headers } from 'next/headers';
 import { cache } from 'react';
+import { headers } from 'next/headers';
 
 type AccessLevel = 'admin' | 'member' | 'no_access';
 
@@ -14,33 +14,46 @@ export const verifyUser = cache(
     try {
       const headersList = await headers();
       
-      // Get user ID from Whop headers
-      // Whop sends this in the iframe request
-      const userId = headersList.get('x-whop-user-id') || 
-                     headersList.get('x-user-id') ||
-                     `anonymous-${Date.now()}`;
+      // Whop SDK sends user info via these headers when properly configured
+      const whopUserId = headersList.get('x-whop-user-id');
+      const whopToken = headersList.get('authorization')?.replace('Bearer ', '');
       
-      console.log('Auth headers:', {
-        'x-whop-user-id': headersList.get('x-whop-user-id'),
-        'x-user-id': headersList.get('x-user-id'),
-        'authorization': headersList.get('authorization'),
-        userId,
-      });
+      let userId = whopUserId || `user-${Math.random().toString(36).substring(7)}`;
+      let username = null;
       
-      // For now, all authenticated users are admins
-      // Later you can add role checking from Whop
-      const accessLevel: AccessLevel = userId.startsWith('anonymous') ? 'member' : 'admin';
-
-      if (requiredAccess === 'admin' && accessLevel !== 'admin') {
-        throw new Error('Admin access required');
+      // If we have a Whop token, fetch user details
+      if (whopToken) {
+        try {
+          const response = await fetch('https://api.whop.com/api/v5/me', {
+            headers: {
+              'Authorization': `Bearer ${whopToken}`,
+            },
+            cache: 'no-store',
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            userId = userData.id || userId;
+            username = userData.username || userData.email?.split('@')[0] || null;
+          }
+        } catch (err) {
+          console.error('Failed to fetch Whop user:', err);
+        }
       }
+      
+      // Everyone can access for now
+      const accessLevel: AccessLevel = 'admin';
 
-      return { userId, accessLevel };
+      return { 
+        userId, 
+        username,
+        accessLevel 
+      };
     } catch (error) {
       console.error('Auth error:', error);
-      // Fallback for development
       return { 
-        userId: `fallback-${Date.now()}`, 
+        userId: `user-${Math.random().toString(36).substring(7)}`,
+        username: null,
         accessLevel: 'admin' as AccessLevel 
       };
     }
