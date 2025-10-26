@@ -13,6 +13,16 @@ const nextConfig = {
       },
     ];
   },
+  experimental: {
+    serverActions: {
+      allowedOrigins: [
+        'tradeproof-rose.vercel.app',
+        '*.apps.whop.com',
+        'whop.com',
+        '*.whop.com',
+      ],
+    },
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
