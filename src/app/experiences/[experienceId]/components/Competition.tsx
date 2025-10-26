@@ -27,6 +27,7 @@ export function Competition({ allTrades, experienceId }: { allTrades: any[]; exp
     if (!statsMap.has(trade.userId)) {
       statsMap.set(trade.userId, {
         userId: trade.userId,
+        username: trade.username,
         pnl: 0,
         trades: 0,
         wins: 0,
@@ -34,7 +35,7 @@ export function Competition({ allTrades, experienceId }: { allTrades: any[]; exp
     }
     
     const stats = statsMap.get(trade.userId);
-    const tradePnl = parseFloat(trade.pnl);  // PARSE TO NUMBER!
+    const tradePnl = parseFloat(trade.pnl);
     stats.pnl += tradePnl;
     stats.trades += 1;
     if (tradePnl > 0) stats.wins += 1;
@@ -44,6 +45,7 @@ export function Competition({ allTrades, experienceId }: { allTrades: any[]; exp
   const leaders = Array.from(statsMap.values())
     .map((s: any) => ({
       userId: s.userId,
+      username: s.username,
       pnl: s.pnl,
       trades: s.trades,
       winRate: s.trades > 0 ? (s.wins / s.trades) * 100 : 0,
@@ -122,7 +124,7 @@ export function Competition({ allTrades, experienceId }: { allTrades: any[]; exp
                     </div>
                     <div>
                       <div className="font-bold text-white">
-                        Trader #{entry.userId.slice(-6)}
+                        {entry.username || `Trader #${entry.userId.slice(-6)}`}
                       </div>
                       <div className="text-xs text-white/70">
                         {entry.trades} trades • {entry.winRate.toFixed(0)}% win rate

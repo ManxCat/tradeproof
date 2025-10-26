@@ -2,6 +2,7 @@
 
 type LeaderboardEntry = {
   userId: string;
+  username?: string | null;
   totalPnl: number;
   totalTrades: number;
   winningTrades: number;
@@ -36,7 +37,9 @@ export function Leaderboard({ data, experienceId }: { data: LeaderboardEntry[]; 
                     <div className="flex items-center gap-4">
                       <div className="text-3xl font-bold w-12 text-center">{medal}</div>
                       <div>
-                        <h3 className="text-xl font-bold text-white">Trader #{trader.userId.slice(-6)}</h3>
+                        <h3 className="text-xl font-bold text-white">
+                          {trader.username || `Trader #${trader.userId.slice(-6)}`}
+                        </h3>
                         <div className="flex gap-4 text-sm text-gray-200">
                           <span>{trader.totalTrades} trades</span>
                           <span>•</span>
@@ -59,7 +62,9 @@ export function Leaderboard({ data, experienceId }: { data: LeaderboardEntry[]; 
                     <div className="flex items-center gap-4">
                       <div className="text-3xl font-bold w-12 text-center">{medal}</div>
                       <div>
-                        <h3 className="text-xl font-bold text-white">Trader #{trader.userId.slice(-6)}</h3>
+                        <h3 className="text-xl font-bold text-white">
+                          {trader.username || `Trader #${trader.userId.slice(-6)}`}
+                        </h3>
                         <div className="flex gap-4 text-sm text-gray-200">
                           <span>{trader.totalTrades} trades</span>
                           <span>•</span>
@@ -82,7 +87,9 @@ export function Leaderboard({ data, experienceId }: { data: LeaderboardEntry[]; 
                     <div className="flex items-center gap-4">
                       <div className="text-3xl font-bold w-12 text-center">{medal}</div>
                       <div>
-                        <h3 className="text-xl font-bold text-white">Trader #{trader.userId.slice(-6)}</h3>
+                        <h3 className="text-xl font-bold text-white">
+                          {trader.username || `Trader #${trader.userId.slice(-6)}`}
+                        </h3>
                         <div className="flex gap-4 text-sm text-gray-200">
                           <span>{trader.totalTrades} trades</span>
                           <span>•</span>
@@ -105,7 +112,9 @@ export function Leaderboard({ data, experienceId }: { data: LeaderboardEntry[]; 
                     <div className="flex items-center gap-4">
                       <div className="text-3xl font-bold w-12 text-center">{medal}</div>
                       <div>
-                        <h3 className="text-xl font-bold text-white">Trader #{trader.userId.slice(-6)}</h3>
+                        <h3 className="text-xl font-bold text-white">
+                          {trader.username || `Trader #${trader.userId.slice(-6)}`}
+                        </h3>
                         <div className="flex gap-4 text-sm text-gray-200">
                           <span>{trader.totalTrades} trades</span>
                           <span>•</span>
