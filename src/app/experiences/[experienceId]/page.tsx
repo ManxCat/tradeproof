@@ -12,22 +12,23 @@ export default async function ExperiencePage({
   params: Promise<{ experienceId: string }>;
 }) {
   const { experienceId } = await params;
+  
+  // This handles authentication and returns user data - ALL SERVER-SIDE
   const { userId, accessLevel } = await verifyUser({ experienceId });
 
-  // Load all trades for this experience
+  // Load all trades - SERVER-SIDE
   const allTrades = await db
     .select()
     .from(trades)
     .where(eq(trades.experienceId, experienceId))
     .orderBy(desc(trades.createdAt));
 
-  // Calculate dashboard stats
+  // All calculations SERVER-SIDE
   const totalPnl = allTrades.reduce((sum, t) => sum + parseFloat(t.pnl), 0);
   const totalTrades = allTrades.length;
   const winningTrades = allTrades.filter(t => parseFloat(t.pnl) > 0).length;
   const avgWinRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
 
-  // Get today's trades
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const todayTrades = allTrades.filter(t => {
@@ -35,7 +36,6 @@ export default async function ExperiencePage({
     return tradeDate >= today;
   });
 
-  // Calculate leaderboard data
   const traderStats = new Map();
   
   allTrades.forEach((trade) => {
@@ -54,7 +54,6 @@ export default async function ExperiencePage({
     if (parseFloat(trade.pnl) > 0) stats.winningTrades += 1;
   });
 
-  // Convert to array and calculate win rates
   const leaderboardData = Array.from(traderStats.values())
     .map(stats => ({
       ...stats,
