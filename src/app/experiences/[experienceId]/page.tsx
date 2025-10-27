@@ -14,16 +14,20 @@ export default async function ExperiencePage({
 }) {
   const { experienceId } = await params;
   
+  // This handles authentication and returns user data - ALL SERVER-SIDE
   const { userId, accessLevel } = await verifyUser({ experienceId });
 
+  // Load all trades - SERVER-SIDE
   const allTrades = await db
     .select()
     .from(trades)
     .where(eq(trades.experienceId, experienceId))
     .orderBy(desc(trades.createdAt));
 
+  // Filter to only show approved trades in leaderboards
   const approvedTrades = allTrades.filter(t => t.status === 'approved');
 
+  // All calculations SERVER-SIDE - PARSE STRINGS TO NUMBERS - APPROVED ONLY
   const totalPnl = approvedTrades.reduce((sum, t) => sum + parseFloat(t.pnl), 0);
   const totalTrades = approvedTrades.length;
   const winningTrades = approvedTrades.filter(t => parseFloat(t.pnl) > 0).length;
@@ -72,12 +76,12 @@ export default async function ExperiencePage({
   const bestTrader = leaderboardData[0];
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-8">
+    <div className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold mb-2">TradeProof Dashboard</h1>
-        <p className="text-gray-400 mb-8">Track your community's trading performance</p>
+        <h1 className="text-3xl md:text-4xl font-bold mb-2">TradeProof Dashboard</h1>
+        <p className="text-gray-400 mb-6 md:mb-8">Track your community's trading performance</p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 md:mb-8">
           <StatCard
             icon="💰"
             label="Total Community P&L"
@@ -113,37 +117,37 @@ export default async function ExperiencePage({
           />
         </div>
 
-        <div className="flex gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-6 md:mb-8">
           <a 
             href={`/experiences/${experienceId}/post-trade`}
-            className="inline-block bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg font-semibold"
+            className="inline-block text-center bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg font-semibold"
           >
             Post New Trade
           </a>
           
           <a 
             href={`/experiences/${experienceId}/admin`}
-            className="inline-block bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold"
+            className="inline-block text-center bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold"
           >
             🔒 Admin Dashboard
           </a>
         </div>
 
-        <div className="mb-8">
+        <div className="mb-6 md:mb-8">
           <Competition allTrades={allTrades} experienceId={experienceId} />
         </div>
 
-        <div className="mb-8">
+        <div className="mb-6 md:mb-8">
           <LeaderboardTabs data={leaderboardData} experienceId={experienceId} />
         </div>
 
-        <div className="bg-gray-900 rounded-lg p-6">
-          <h2 className="text-2xl font-bold mb-4">Recent Trades</h2>
+        <div className="bg-gray-900 rounded-lg p-4 md:p-6">
+          <h2 className="text-xl md:text-2xl font-bold mb-4">Recent Trades</h2>
           
           {approvedTrades.length === 0 ? (
             <p className="text-gray-400">No trades yet. Be the first to post!</p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {approvedTrades.slice(0, 10).map((trade) => {
                 const tradePnl = parseFloat(trade.pnl);
                 const tradeRoi = parseFloat(trade.roi);
@@ -153,11 +157,11 @@ export default async function ExperiencePage({
                 return (
                   <div 
                     key={trade.id}
-                    className="bg-gray-800 rounded-lg p-4 flex justify-between items-center"
+                    className="bg-gray-800 rounded-lg p-3 md:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"
                   >
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-xl font-bold">{trade.symbol}</h3>
+                    <div className="w-full sm:w-auto">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h3 className="text-lg md:text-xl font-bold">{trade.symbol}</h3>
                         <span className={`text-xs px-2 py-1 rounded ${
                           trade.positionType === 'long' ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'
                         }`}>
@@ -177,11 +181,11 @@ export default async function ExperiencePage({
                       </p>
                     </div>
                     
-                    <div className="text-right">
-                      <p className={`text-2xl font-bold ${tradePnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    <div className="text-right w-full sm:w-auto">
+                      <p className={`text-xl md:text-2xl font-bold ${tradePnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                         ${tradePnl >= 0 ? '+' : ''}{tradePnl.toFixed(2)}
                       </p>
-                      <p className={`text-sm ${tradeRoi >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      <p className={`text-xs md:text-sm ${tradeRoi >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                         {tradeRoi.toFixed(2)}% ROI
                       </p>
                     </div>
