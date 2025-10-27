@@ -91,7 +91,7 @@ export function LeaderboardTabs({
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors ${
+            className={`px-3 md:px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors text-sm md:text-base ${
               activeTab === tab.id
                 ? 'bg-purple-600 text-white'
                 : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
@@ -102,7 +102,7 @@ export function LeaderboardTabs({
         ))}
       </div>
 
-      <h2 className="text-3xl font-bold mb-6">{titles[activeTab]}</h2>
+      <h2 className="text-2xl md:text-3xl font-bold mb-6">{titles[activeTab]}</h2>
       
       {/* Leaderboard List */}
       <div className="space-y-3">
@@ -120,26 +120,26 @@ export function LeaderboardTabs({
           
           return (
             <a key={trader.userId} href={url} className="block">
-              <div className={`${bgClass} rounded-lg p-4 hover:scale-105 transition-transform`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="text-3xl font-bold w-12 text-center">{medal}</div>
-                    <div>
-                      <h3 className="text-xl font-bold text-white">
+              <div className={`${bgClass} rounded-lg p-3 md:p-4 hover:scale-105 transition-transform`}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
+                    <div className="text-xl md:text-3xl font-bold w-8 md:w-12 text-center flex-shrink-0">{medal}</div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-base md:text-xl font-bold text-white truncate">
                         {trader.username || `Trader #${trader.userId.slice(-6)}`}
                       </h3>
-                      <div className="flex gap-4 text-sm text-gray-200">
+                      <div className="flex gap-2 md:gap-4 text-xs md:text-sm text-gray-200 flex-wrap">
                         <span>{trader.totalTrades} trades</span>
                         <span>•</span>
-                        <span>{trader.winRate.toFixed(1)}% win rate</span>
+                        <span>{trader.winRate.toFixed(1)}% win</span>
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold text-white">
+                  <div className="text-right min-w-0 flex-shrink-0">
+                    <div className="text-lg md:text-3xl font-bold text-white break-words">
                       {getDisplayValue(trader)}
                     </div>
-                    <div className="text-sm text-gray-200">
+                    <div className="text-xs md:text-sm text-gray-200 whitespace-nowrap">
                       {trader.winningTrades}W / {trader.totalTrades - trader.winningTrades}L
                     </div>
                   </div>
