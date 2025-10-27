@@ -1,38 +1,26 @@
-import { pgTable, text, integer, numeric, timestamp } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
-
-export const timestamps = {
-  createdAt: timestamp('created_at')
-    .notNull()
-    .default(sql`now()`),
-  updatedAt: timestamp('updated_at')
-    .notNull()
-    .default(sql`now()`),
-};
+import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const trades = pgTable('trades', {
   id: text('id').primaryKey(),
   experienceId: text('experience_id').notNull(),
   userId: text('user_id').notNull(),
   username: text('username'),
+  
+  // Trade details
   symbol: text('symbol').notNull(),
-  entryPrice: numeric('entry_price').notNull(),
-  exitPrice: numeric('exit_price').notNull(),
-  positionSize: numeric('position_size').notNull(),
-  pnl: numeric('pnl').notNull(),
-  roi: numeric('roi').notNull(),
-  screenshot: text('screenshot'),
+  positionType: text('position_type').notNull().default('long'),
+  assetType: text('asset_type').notNull().default('stock'),
+  leverage: text('leverage').notNull().default('1'),
+  
+  entryPrice: text('entry_price').notNull(),
+  exitPrice: text('exit_price').notNull(),
+  positionSize: text('position_size').notNull(),
+  
+  // Calculated fields
+  pnl: text('pnl').notNull(),
+  roi: text('roi').notNull(),
+  
   status: text('status').notNull().default('pending'),
-  ...timestamps,
-});
-
-export const members = pgTable('members', {
-  id: text('id').primaryKey(),
-  experienceId: text('experience_id').notNull(),
-  userId: text('user_id').notNull(),
-  username: text('username').notNull(),
-  totalPnl: numeric('total_pnl').notNull().default('0'),
-  totalTrades: integer('total_trades').notNull().default(0),
-  winningTrades: integer('winning_trades').notNull().default(0),
-  ...timestamps,
+  screenshot: text('screenshot'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
