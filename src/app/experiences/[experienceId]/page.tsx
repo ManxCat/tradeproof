@@ -105,7 +105,7 @@ export default async function ExperiencePage({
             icon="👑"
             label="Top Trader"
             value={bestTrader ? `$${bestTrader.totalPnl.toFixed(0)}` : 'N/A'}
-            subtitle={bestTrader ? `Trader #${bestTrader.userId.slice(-6)}` : 'No traders yet'}
+            subtitle={bestTrader ? (bestTrader.username || `Trader #${bestTrader.userId.slice(-6)}`) : 'No traders yet'}
             color="purple"
           />
         </div>
@@ -144,7 +144,22 @@ export default async function ExperiencePage({
                     className="bg-gray-800 rounded-lg p-4 flex justify-between items-center"
                   >
                     <div>
-                      <h3 className="text-xl font-bold">{trade.symbol}</h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-xl font-bold">{trade.symbol}</h3>
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          trade.positionType === 'long' ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'
+                        }`}>
+                          {trade.positionType?.toUpperCase() || 'LONG'}
+                        </span>
+                        {trade.leverage && parseFloat(trade.leverage) > 1 && (
+                          <span className="text-xs px-2 py-1 rounded bg-purple-900 text-purple-300">
+                            {trade.leverage}x
+                          </span>
+                        )}
+                        <span className="text-xs px-2 py-1 rounded bg-gray-700 text-gray-300">
+                          {trade.assetType?.toUpperCase() || 'STOCK'}
+                        </span>
+                      </div>
                       <p className="text-sm text-gray-400">
                         ${tradeEntry.toFixed(2)} → ${tradeExit.toFixed(2)}
                       </p>
