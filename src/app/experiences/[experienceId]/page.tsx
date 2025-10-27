@@ -5,6 +5,7 @@ import { eq, desc } from 'drizzle-orm';
 import { Leaderboard } from './components/Leaderboard';
 import { StatCard } from './components/StatCard';
 import { Competition } from './components/Competition';
+import { LeaderboardTabs } from './components/LeaderboardTabs';
 
 export default async function ExperiencePage({
   params,
@@ -13,20 +14,16 @@ export default async function ExperiencePage({
 }) {
   const { experienceId } = await params;
   
-  // This handles authentication and returns user data - ALL SERVER-SIDE
   const { userId, accessLevel } = await verifyUser({ experienceId });
 
-  // Load all trades - SERVER-SIDE
   const allTrades = await db
     .select()
     .from(trades)
     .where(eq(trades.experienceId, experienceId))
     .orderBy(desc(trades.createdAt));
 
-  // Filter to only show approved trades in leaderboards
   const approvedTrades = allTrades.filter(t => t.status === 'approved');
 
-  // All calculations SERVER-SIDE - PARSE STRINGS TO NUMBERS - APPROVED ONLY
   const totalPnl = approvedTrades.reduce((sum, t) => sum + parseFloat(t.pnl), 0);
   const totalTrades = approvedTrades.length;
   const winningTrades = approvedTrades.filter(t => parseFloat(t.pnl) > 0).length;
@@ -49,12 +46,14 @@ export default async function ExperiencePage({
         totalPnl: 0,
         totalTrades: 0,
         winningTrades: 0,
+        totalRoi: 0,
       });
     }
     
     const stats = traderStats.get(trade.userId);
     stats.totalPnl += parseFloat(trade.pnl);
     stats.totalTrades += 1;
+    stats.totalRoi += parseFloat(trade.roi);
     if (parseFloat(trade.pnl) > 0) stats.winningTrades += 1;
   });
 
@@ -62,6 +61,7 @@ export default async function ExperiencePage({
     .map(stats => ({
       ...stats,
       winRate: stats.totalTrades > 0 ? (stats.winningTrades / stats.totalTrades) * 100 : 0,
+      avgRoi: stats.totalTrades > 0 ? stats.totalRoi / stats.totalTrades : 0,
     }))
     .sort((a, b) => b.totalPnl - a.totalPnl)
     .map((trader, index) => ({
@@ -134,7 +134,7 @@ export default async function ExperiencePage({
         </div>
 
         <div className="mb-8">
-          <Leaderboard data={leaderboardData} experienceId={experienceId} />
+          <LeaderboardTabs data={leaderboardData} experienceId={experienceId} />
         </div>
 
         <div className="bg-gray-900 rounded-lg p-6">

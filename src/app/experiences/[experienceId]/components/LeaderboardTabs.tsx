@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 type LeaderboardEntry = {
   userId: string;
   username?: string | null;
@@ -7,19 +9,28 @@ type LeaderboardEntry = {
   totalTrades: number;
   winningTrades: number;
   winRate: number;
+  avgRoi: number;
   rank: number;
-  avgRoi?: number;
 };
 
-export function Leaderboard({ 
+type LeaderboardType = 'pnl' | 'roi' | 'winrate' | 'active';
+
+export function LeaderboardTabs({ 
   data, 
-  experienceId,
-  type = 'pnl'
+  experienceId 
 }: { 
   data: LeaderboardEntry[]; 
   experienceId: string;
-  type?: 'pnl' | 'roi' | 'winrate' | 'active';
 }) {
+  const [activeTab, setActiveTab] = useState<LeaderboardType>('pnl');
+
+  const tabs = [
+    { id: 'pnl' as LeaderboardType, label: '💰 Total P&L' },
+    { id: 'roi' as LeaderboardType, label: '📈 Best ROI' },
+    { id: 'winrate' as LeaderboardType, label: '🎯 Win Rate' },
+    { id: 'active' as LeaderboardType, label: '🔥 Most Active' },
+  ];
+
   const titles = {
     pnl: '💰 Top Traders by P&L',
     roi: '📈 Top Traders by ROI',
@@ -27,12 +38,33 @@ export function Leaderboard({
     active: '🔥 Most Active Traders'
   };
 
+  const getSortedData = () => {
+    const sorted = [...data];
+    
+    switch(activeTab) {
+      case 'pnl':
+        return sorted.sort((a, b) => b.totalPnl - a.totalPnl)
+          .map((trader, index) => ({ ...trader, rank: index + 1 }));
+      case 'roi':
+        return sorted.sort((a, b) => b.avgRoi - a.avgRoi)
+          .map((trader, index) => ({ ...trader, rank: index + 1 }));
+      case 'winrate':
+        return sorted.sort((a, b) => b.winRate - a.winRate)
+          .map((trader, index) => ({ ...trader, rank: index + 1 }));
+      case 'active':
+        return sorted.sort((a, b) => b.totalTrades - a.totalTrades)
+          .map((trader, index) => ({ ...trader, rank: index + 1 }));
+      default:
+        return sorted;
+    }
+  };
+
   const getDisplayValue = (trader: LeaderboardEntry) => {
-    switch(type) {
+    switch(activeTab) {
       case 'pnl':
         return `$${trader.totalPnl >= 0 ? '+' : ''}${trader.totalPnl.toFixed(2)}`;
       case 'roi':
-        return `${trader.avgRoi?.toFixed(1) || '0'}%`;
+        return `${trader.avgRoi.toFixed(1)}%`;
       case 'winrate':
         return `${trader.winRate.toFixed(1)}%`;
       case 'active':
@@ -40,10 +72,12 @@ export function Leaderboard({
     }
   };
 
+  const sortedData = getSortedData();
+
   if (data.length === 0) {
     return (
       <div className="bg-gray-900 rounded-lg p-6">
-        <h2 className="text-3xl font-bold mb-6">{titles[type]}</h2>
+        <h2 className="text-3xl font-bold mb-6">🏆 Leaderboards</h2>
         <p className="text-gray-400 text-center py-8">No traders yet. Be the first!</p>
       </div>
     );
@@ -51,10 +85,28 @@ export function Leaderboard({
 
   return (
     <div className="bg-gray-900 rounded-lg p-6">
-      <h2 className="text-3xl font-bold mb-6">{titles[type]}</h2>
+      {/* Tab Buttons */}
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors ${
+              activeTab === tab.id
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <h2 className="text-3xl font-bold mb-6">{titles[activeTab]}</h2>
       
+      {/* Leaderboard List */}
       <div className="space-y-3">
-        {data.map((trader) => {
+        {sortedData.slice(0, 10).map((trader) => {
           const medal = trader.rank === 1 ? '🥇' : trader.rank === 2 ? '🥈' : trader.rank === 3 ? '🥉' : '#' + trader.rank;
           const url = '/experiences/' + experienceId + '/trader/' + trader.userId;
           
@@ -87,7 +139,9 @@ export function Leaderboard({
                     <div className="text-3xl font-bold text-white">
                       {getDisplayValue(trader)}
                     </div>
-                    <div className="text-sm text-gray-200">{trader.winningTrades}W / {trader.totalTrades - trader.winningTrades}L</div>
+                    <div className="text-sm text-gray-200">
+                      {trader.winningTrades}W / {trader.totalTrades - trader.winningTrades}L
+                    </div>
                   </div>
                 </div>
               </div>
