@@ -2,11 +2,6 @@ import { verifyUser } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { trades } from '@/lib/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
-import { PerformanceChart } from '../../components/PerformanceChart';
-import { StreakBadge } from '../../components/StreakBadge';
-import { AchievementsList } from '../../components/AchievementBadge';
-import { TraderLevel } from '../../components/TraderLevel';
-import { DailyChallenges } from '../../components/DailyChallenges';
 
 export default async function TraderProfilePage({
   params,
@@ -16,7 +11,8 @@ export default async function TraderProfilePage({
   const { experienceId, userId } = await params;
   await verifyUser({ experienceId });
 
-  const traderTrades = await db
+  // Get all trades for this trader
+  const allTraderTrades = await db
     .select()
     .from(trades)
     .where(
@@ -27,6 +23,10 @@ export default async function TraderProfilePage({
     )
     .orderBy(desc(trades.createdAt));
 
+  // Filter to only approved trades
+  const traderTrades = allTraderTrades.filter(t => t.status === 'approved');
+  
+  const traderName = traderTrades[0]?.username || `Trader #${userId.slice(-6)}`;
   const totalTrades = traderTrades.length;
   const totalPnl = traderTrades.reduce((sum, t) => sum + parseFloat(t.pnl), 0);
   const winningTrades = traderTrades.filter(t => parseFloat(t.pnl) > 0).length;
@@ -36,6 +36,7 @@ export default async function TraderProfilePage({
   const bestTrade = traderTrades.length > 0 ? Math.max(...traderTrades.map(t => parseFloat(t.pnl))) : 0;
   const worstTrade = traderTrades.length > 0 ? Math.min(...traderTrades.map(t => parseFloat(t.pnl))) : 0;
 
+  // Calculate current streak
   let currentStreak = 0;
   let streakType: 'win' | 'loss' | null = null;
   for (const trade of traderTrades) {
@@ -52,53 +53,6 @@ export default async function TraderProfilePage({
     }
   }
 
-  const chartData = traderTrades.slice().reverse().map((trade, index, arr) => {
-    const cumulative = arr.slice(0, index + 1).reduce((sum, t) => sum + parseFloat(t.pnl), 0);
-    return {
-      date: new Date(trade.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      pnl: parseFloat(trade.pnl),
-      cumulative: cumulative
-    };
-  });
-
-  // Calculate achievements
-  const achievements: string[] = [];
-  
-  if (traderTrades.length > 0) achievements.push('first_blood');
-  
-  if (totalPnl > 0) achievements.push('profitable');
-  
-  if (traderTrades.length >= 100) achievements.push('century_club');
-  
-  if (traderTrades.some(t => parseFloat(t.positionSize) >= 10000)) achievements.push('whale');
-  
-  let maxWinStreak = 0;
-  let winStreakCount = 0;
-  for (const trade of traderTrades) {
-    if (parseFloat(trade.pnl) > 0) {
-      winStreakCount++;
-      maxWinStreak = Math.max(maxWinStreak, winStreakCount);
-    } else {
-      winStreakCount = 0;
-    }
-  }
-  if (maxWinStreak >= 3) achievements.push('hot_streak');
-  
-  if (traderTrades.length >= 5 && winningTrades === traderTrades.length) {
-    achievements.push('perfect_week');
-  }
-  
-  let maxConsecutive = traderTrades.length;
-  if (maxConsecutive >= 10) achievements.push('diamond_hands');
-
-  // Get today's trades for challenges
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayTrades = traderTrades.filter(t => {
-    const tradeDate = new Date(t.createdAt);
-    return tradeDate >= today;
-  });
-
   return (
     <div className="min-h-screen bg-gray-950 text-white p-8">
       <div className="max-w-6xl mx-auto">
@@ -109,16 +63,18 @@ export default async function TraderProfilePage({
           ← Back to Dashboard
         </a>
 
+        {/* Profile Header */}
         <div className="flex items-center gap-4 mb-8">
           <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-3xl">
             👤
           </div>
           <div>
-            <h1 className="text-4xl font-bold">Trader #{userId.slice(-6)}</h1>
-            <p className="text-gray-400">Member Profile</p>
+            <h1 className="text-4xl font-bold">{traderName}</h1>
+            <p className="text-gray-400">Trader Profile</p>
           </div>
         </div>
 
+        {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
             <div className="text-gray-400 text-sm mb-1">Total P&L</div>
@@ -174,51 +130,25 @@ export default async function TraderProfilePage({
           </div>
 
           <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-            <div className="text-gray-400 text-sm mb-1">Rank</div>
-            <div className="text-3xl font-bold text-yellow-500">
-              🏆
+            <div className="text-gray-400 text-sm mb-1">Avg ROI</div>
+            <div className="text-2xl font-bold text-purple-500">
+              {totalTrades > 0 ? (traderTrades.reduce((sum, t) => sum + parseFloat(t.roi), 0) / totalTrades).toFixed(1) : '0'}%
             </div>
           </div>
         </div>
 
-        {traderTrades.length > 0 && (
-          <div className="mb-8">
-            <PerformanceChart data={chartData} />
-          </div>
-        )}
-
-        <div className="mb-8">
-          <AchievementsList achievements={achievements} />
-        </div>
-
-        <div className="mb-8">
-          <TraderLevel totalTrades={totalTrades} totalPnl={totalPnl} />
-        </div>
-
-        <div className="mb-8">
-          <DailyChallenges todayTrades={todayTrades} totalTrades={totalTrades} />
-        </div>
-
+        {/* Trade History */}
         <div className="bg-gray-900 rounded-lg p-6">
           <h2 className="text-2xl font-bold mb-6">Trade History</h2>
           
           {traderTrades.length === 0 ? (
-            <p className="text-gray-400 text-center py-8">No trades yet</p>
+            <p className="text-gray-400 text-center py-8">No approved trades yet</p>
           ) : (
             <div className="space-y-3">
-              {traderTrades.map((trade, index) => {
-                let streakCount = 1;
-                let tradeStreakType: 'win' | 'loss' = parseFloat(trade.pnl) > 0 ? 'win' : 'loss';
+              {traderTrades.map((trade) => {
+                const tradePnl = parseFloat(trade.pnl);
+                const tradeRoi = parseFloat(trade.roi);
                 
-                for (let i = index - 1; i >= 0; i--) {
-                  const prevTrade = traderTrades[i];
-                  if ((tradeStreakType === 'win' && parseFloat(prevTrade.pnl) > 0) || (tradeStreakType === 'loss' && parseFloat(prevTrade.pnl) < 0)) {
-                    streakCount++;
-                  } else {
-                    break;
-                  }
-                }
-
                 return (
                   <div 
                     key={trade.id}
@@ -226,17 +156,29 @@ export default async function TraderProfilePage({
                   >
                     <div className="flex items-center gap-4">
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl ${
-                        parseFloat(trade.pnl) >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'
+                        tradePnl >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'
                       }`}>
-                        {parseFloat(trade.pnl) >= 0 ? '✅' : '❌'}
+                        {tradePnl >= 0 ? '✅' : '❌'}
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="text-xl font-bold">{trade.symbol}</h3>
-                          <StreakBadge streak={streakCount} type={tradeStreakType} size="sm" />
+                          <span className={`text-xs px-2 py-1 rounded ${
+                            trade.positionType === 'long' ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'
+                          }`}>
+                            {trade.positionType?.toUpperCase() || 'LONG'}
+                          </span>
+                          {trade.leverage && parseFloat(trade.leverage) > 1 && (
+                            <span className="text-xs px-2 py-1 rounded bg-purple-900 text-purple-300">
+                              {trade.leverage}x
+                            </span>
+                          )}
+                          <span className="text-xs px-2 py-1 rounded bg-gray-700 text-gray-300">
+                            {trade.assetType?.toUpperCase() || 'STOCK'}
+                          </span>
                         </div>
                         <p className="text-sm text-gray-400">
-                          ${trade.entryPrice} → ${trade.exitPrice} • ${parseFloat(trade.positionSize).toFixed(0)} position
+                          ${parseFloat(trade.entryPrice).toFixed(2)} → ${parseFloat(trade.exitPrice).toFixed(2)} • ${parseFloat(trade.positionSize).toFixed(0)} position
                         </p>
                         <p className="text-xs text-gray-500">
                           {new Date(trade.createdAt).toLocaleDateString()}
@@ -245,11 +187,11 @@ export default async function TraderProfilePage({
                     </div>
                     
                     <div className="text-right">
-                      <p className={`text-2xl font-bold ${parseFloat(trade.pnl) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                        ${parseFloat(trade.pnl) >= 0 ? '+' : ''}{parseFloat(trade.pnl).toFixed(2)}
+                      <p className={`text-2xl font-bold ${tradePnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        ${tradePnl >= 0 ? '+' : ''}{tradePnl.toFixed(2)}
                       </p>
-                      <p className={`text-sm ${parseFloat(trade.roi) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {parseFloat(trade.roi).toFixed(2)}% ROI
+                      <p className={`text-sm ${tradeRoi >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {tradeRoi.toFixed(2)}% ROI
                       </p>
                     </div>
                   </div>
