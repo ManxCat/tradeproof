@@ -23,22 +23,25 @@ export default async function ExperiencePage({
     .where(eq(trades.experienceId, experienceId))
     .orderBy(desc(trades.createdAt));
 
-  // All calculations SERVER-SIDE - PARSE STRINGS TO NUMBERS
-  const totalPnl = allTrades.reduce((sum, t) => sum + parseFloat(t.pnl), 0);
-  const totalTrades = allTrades.length;
-  const winningTrades = allTrades.filter(t => parseFloat(t.pnl) > 0).length;
+  // Filter to only show approved trades in leaderboards
+  const approvedTrades = allTrades.filter(t => t.status === 'approved');
+
+  // All calculations SERVER-SIDE - PARSE STRINGS TO NUMBERS - APPROVED ONLY
+  const totalPnl = approvedTrades.reduce((sum, t) => sum + parseFloat(t.pnl), 0);
+  const totalTrades = approvedTrades.length;
+  const winningTrades = approvedTrades.filter(t => parseFloat(t.pnl) > 0).length;
   const avgWinRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const todayTrades = allTrades.filter(t => {
+  const todayTrades = approvedTrades.filter(t => {
     const tradeDate = new Date(t.createdAt);
     return tradeDate >= today;
   });
 
   const traderStats = new Map();
   
-  allTrades.forEach((trade) => {
+  approvedTrades.forEach((trade) => {
     if (!traderStats.has(trade.userId)) {
       traderStats.set(trade.userId, {
         userId: trade.userId,
@@ -110,12 +113,21 @@ export default async function ExperiencePage({
           />
         </div>
 
-        <a 
-          href={`/experiences/${experienceId}/post-trade`}
-          className="inline-block bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg font-semibold mb-8"
-        >
-          Post New Trade
-        </a>
+        <div className="flex gap-4 mb-8">
+          <a 
+            href={`/experiences/${experienceId}/post-trade`}
+            className="inline-block bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg font-semibold"
+          >
+            Post New Trade
+          </a>
+          
+          <a 
+            href={`/experiences/${experienceId}/admin`}
+            className="inline-block bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold"
+          >
+            🔒 Admin Dashboard
+          </a>
+        </div>
 
         <div className="mb-8">
           <Competition allTrades={allTrades} experienceId={experienceId} />
@@ -128,11 +140,11 @@ export default async function ExperiencePage({
         <div className="bg-gray-900 rounded-lg p-6">
           <h2 className="text-2xl font-bold mb-4">Recent Trades</h2>
           
-          {allTrades.length === 0 ? (
+          {approvedTrades.length === 0 ? (
             <p className="text-gray-400">No trades yet. Be the first to post!</p>
           ) : (
             <div className="space-y-4">
-              {allTrades.slice(0, 10).map((trade) => {
+              {approvedTrades.slice(0, 10).map((trade) => {
                 const tradePnl = parseFloat(trade.pnl);
                 const tradeRoi = parseFloat(trade.roi);
                 const tradeEntry = parseFloat(trade.entryPrice);

@@ -54,7 +54,7 @@ export async function submitTrade(formData: FormData, experienceId: string) {
     positionSize: positionSize.toString(),
     pnl: pnl.toString(),
     roi: roi.toString(),
-    status: 'approved',
+    status: 'pending',
     screenshot: null,
   });
 
