@@ -3,6 +3,19 @@ import { db } from '@/lib/db';
 import { trades } from '@/lib/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
+// Helper function to format large numbers
+function formatCurrency(num: number): string {
+  const absNum = Math.abs(num);
+  
+  if (absNum >= 1000000) {
+    return `${num >= 0 ? '+' : ''}$${(num / 1000000).toFixed(1)}M`;
+  }
+  if (absNum >= 1000) {
+    return `${num >= 0 ? '+' : ''}$${(num / 1000).toFixed(1)}K`;
+  }
+  return `${num >= 0 ? '+' : ''}$${num.toFixed(2)}`;
+}
+
 export default async function TraderProfilePage({
   params,
 }: {
@@ -79,7 +92,7 @@ export default async function TraderProfilePage({
           <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
             <div className="text-gray-400 text-sm mb-1">Total P&L</div>
             <div className={`text-3xl font-bold ${totalPnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-              ${totalPnl >= 0 ? '+' : ''}{totalPnl.toFixed(2)}
+              {formatCurrency(totalPnl)}
             </div>
           </div>
 
@@ -111,21 +124,21 @@ export default async function TraderProfilePage({
           <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
             <div className="text-gray-400 text-sm mb-1">Avg P&L</div>
             <div className={`text-2xl font-bold ${avgPnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-              ${avgPnl >= 0 ? '+' : ''}{avgPnl.toFixed(2)}
+              {formatCurrency(avgPnl)}
             </div>
           </div>
 
           <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
             <div className="text-gray-400 text-sm mb-1">Best Trade</div>
             <div className="text-2xl font-bold text-green-500">
-              ${bestTrade >= 0 ? '+' : ''}{bestTrade.toFixed(2)}
+              {formatCurrency(bestTrade)}
             </div>
           </div>
 
           <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
             <div className="text-gray-400 text-sm mb-1">Worst Trade</div>
             <div className="text-2xl font-bold text-red-500">
-              ${worstTrade.toFixed(2)}
+              {formatCurrency(worstTrade)}
             </div>
           </div>
 
@@ -188,7 +201,7 @@ export default async function TraderProfilePage({
                     
                     <div className="text-right">
                       <p className={`text-2xl font-bold ${tradePnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                        ${tradePnl >= 0 ? '+' : ''}{tradePnl.toFixed(2)}
+                        {formatCurrency(tradePnl)}
                       </p>
                       <p className={`text-sm ${tradeRoi >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                         {tradeRoi.toFixed(2)}% ROI
