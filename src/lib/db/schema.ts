@@ -1,5 +1,13 @@
-import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, timestamp } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 
+// Helper for timestamps
+export const timestamps = {
+  createdAt: timestamp('created_at').notNull().default(sql`now()`),
+  updatedAt: timestamp('updated_at').notNull().default(sql`now()`),
+};
+
+// Trades table (your existing table)
 export const trades = pgTable('trades', {
   id: text('id').primaryKey(),
   experienceId: text('experience_id').notNull(),
@@ -23,4 +31,24 @@ export const trades = pgTable('trades', {
   status: text('status').notNull().default('pending'),
   screenshot: text('screenshot'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// App settings table (NEW - for cancellation feature)
+export const appSettings = pgTable('app_settings', {
+  id: text('id').primaryKey(),
+  experienceId: text('experience_id').notNull().unique(),
+  minCancellationCharacters: integer('min_cancellation_characters').notNull().default(20),
+  ...timestamps,
+});
+
+// Cancellation feedback table (NEW - for cancellation feature)
+export const cancellationFeedback = pgTable('cancellation_feedback', {
+  id: text('id').primaryKey(),
+  experienceId: text('experience_id').notNull(),
+  membershipId: text('membership_id').notNull(),
+  userId: text('user_id').notNull(),
+  username: text('username').notNull(),
+  feedback: text('feedback').notNull(),
+  cancelledAt: timestamp('cancelled_at').notNull().default(sql`now()`),
+  ...timestamps,
 });

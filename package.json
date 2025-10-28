@@ -17,6 +17,7 @@
     "@whop-apps/dev-proxy": "^0.0.1-canary.117",
     "@whop-apps/sdk": "^0.0.1-canary.117",
     "@whop/api": "^0.0.51",
+    "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.6",
     "nanoid": "^5.1.6",
     "next": "14.2.15",
