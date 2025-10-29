@@ -101,13 +101,22 @@ export default function SettingsClient({ experienceId }: SettingsClientProps) {
             </div>
           )}
 
-          <button
-            onClick={handleSave}
-            disabled={loading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-          >
-            {loading ? 'Saving...' : 'Save Settings'}
-          </button>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={handleSave}
+              disabled={loading}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {loading ? 'Saving...' : 'Save Settings'}
+            </button>
+
+            <a
+              href={`/experiences/${experienceId}`}
+              className="text-center px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700"
+            >
+              ← Back to Dashboard
+            </a>
+          </div>
         </div>
       </div>
     </div>
