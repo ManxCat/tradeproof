@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 
-export default function SettingsClient({
-  experienceId,
-}: {
+interface SettingsClientProps {
   experienceId: string;
-}) {
+}
+
+export default function SettingsClient({ experienceId }: SettingsClientProps) {
   const [minChars, setMinChars] = useState(20);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -39,7 +39,7 @@ export default function SettingsClient({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          experienceId: experienceId,
+          experienceId,
           minCancellationCharacters: minChars
         })
       });
