@@ -21,24 +21,28 @@ export const verifyUser = cache(
       // Fetch user details
       const user = await whopSdk.users.getUser({ userId });
       
-      // Fetch experience
-      const experience = await whopSdk.experiences.getExperience({ experienceId });
+      // Check user's access level for this experience
+      const accessCheck = await whopSdk.users.checkAccess(
+        experienceId,
+        { id: userId }
+      );
       
-      console.log('🔍 USER OBJECT:', JSON.stringify(user, null, 2));
-      console.log('📦 EXPERIENCE:', JSON.stringify(experience, null, 2));
-      console.log('🏢 COMPANY ID:', experience.company.id);
-      console.log('👤 USER ID:', userId);
+      console.log('🔐 Access check result:', accessCheck);
       
-      // Check what methods are available
-      console.log('🔧 Available SDK methods:', Object.keys(whopSdk));
-      
-      // TEMPORARY: Make everyone admin until we figure out the right method
-      const isAdmin = true;
+      // Map Whop access levels to our access levels
+      let accessLevel: AccessLevel;
+      if (accessCheck.access_level === 'admin') {
+        accessLevel = 'admin';
+      } else if (accessCheck.access_level === 'customer') {
+        accessLevel = 'member';
+      } else {
+        accessLevel = 'no_access';
+      }
       
       return { 
         userId, 
         username: user.username || user.name || null,
-        accessLevel: isAdmin ? 'admin' : 'member' as AccessLevel
+        accessLevel
       };
     } catch (error) {
       console.error('Auth error:', error);
