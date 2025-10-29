@@ -22,6 +22,9 @@ export default async function ExperiencePage({
   // This handles authentication and returns user data - ALL SERVER-SIDE
   const { userId, accessLevel } = await verifyUser({ experienceId });
 
+  // DEBUG: Log auth status
+  console.log('🔍 AUTH DEBUG:', { userId, accessLevel, experienceId });
+
   // Show admin view if requested and user is admin
   if (view === 'admin') {
     if (accessLevel !== 'admin') {
@@ -123,35 +126,42 @@ export default async function ExperiencePage({
           </div>
           
           {/* Navigation Tabs */}
-          <div className="flex gap-2">
-            <a
-              href={`/experiences/${experienceId}`}
-              className={`px-4 py-2 rounded-lg text-sm ${
-                !view ? 'bg-blue-600 text-white' : 'bg-gray-800 hover:bg-gray-700'
-              }`}
-            >
-              Dashboard
-            </a>
-            {accessLevel === 'admin' && (
-              <>
-                <a
-                  href={`/experiences/${experienceId}?view=admin`}
-                  className={`px-4 py-2 rounded-lg text-sm ${
-                    view === 'admin' ? 'bg-blue-600 text-white' : 'bg-gray-800 hover:bg-gray-700'
-                  }`}
-                >
-                  Admin
-                </a>
-                <a
-                  href={`/experiences/${experienceId}?view=settings`}
-                  className={`px-4 py-2 rounded-lg text-sm ${
-                    view === 'settings' ? 'bg-blue-600 text-white' : 'bg-gray-800 hover:bg-gray-700'
-                  }`}
-                >
-                  Settings
-                </a>
-              </>
-            )}
+          <div className="flex flex-col gap-2">
+            {/* DEBUG INFO */}
+            <div className="text-xs text-gray-500 bg-gray-800 px-3 py-1 rounded">
+              Access: <span className="text-yellow-400">{accessLevel}</span> | User: <span className="text-blue-400">{userId || 'null'}</span>
+            </div>
+            
+            <div className="flex gap-2">
+              <a
+                href={`/experiences/${experienceId}`}
+                className={`px-4 py-2 rounded-lg text-sm ${
+                  !view ? 'bg-blue-600 text-white' : 'bg-gray-800 hover:bg-gray-700'
+                }`}
+              >
+                Dashboard
+              </a>
+              {accessLevel === 'admin' && (
+                <>
+                  <a
+                    href={`/experiences/${experienceId}?view=admin`}
+                    className={`px-4 py-2 rounded-lg text-sm ${
+                      view === 'admin' ? 'bg-blue-600 text-white' : 'bg-gray-800 hover:bg-gray-700'
+                    }`}
+                  >
+                    Admin
+                  </a>
+                  <a
+                    href={`/experiences/${experienceId}?view=settings`}
+                    className={`px-4 py-2 rounded-lg text-sm ${
+                      view === 'settings' ? 'bg-blue-600 text-white' : 'bg-gray-800 hover:bg-gray-700'
+                    }`}
+                  >
+                    Settings
+                  </a>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
