@@ -186,10 +186,10 @@ export default async function ExperiencePage({
 
         <Competition experienceId={experienceId} allTrades={approvedTrades} />
 
-        <LeaderboardTabs 
-          experienceId={experienceId}
-          leaderboardData={leaderboardData}
-        />
+       <LeaderboardTabs 
+  experienceId={experienceId}
+  data={leaderboardData}
+/>
 
         <a 
           href={`/experiences/${experienceId}/post-trade`}
