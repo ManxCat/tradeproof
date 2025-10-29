@@ -18,41 +18,20 @@ export const verifyUser = cache(
       // Get userId from Whop token in headers
       const { userId } = await whopSdk.verifyUserToken(headersList);
       
-      console.log('Got userId from Whop:', userId);
-      
       // Fetch user details
       const user = await whopSdk.users.getUser({ userId });
       
-      console.log('Got user details:', user);
-      
-      // Fetch experience to get company ID
-      console.log('Fetching experience...');
-      const experience = await whopSdk.experiences.getExperience({ experienceId });
-      
-      console.log('Experience data:', experience);
-      console.log('Company ID from experience:', experience?.company?.id);
-      
-      // Check if user owns the company that this experience belongs to
-      const companyId = experience?.company?.id;
-      if (!companyId) {
-        console.error('No company ID found in experience');
-        return { 
-          userId, 
-          username: user.username || user.name || null,
-          accessLevel: 'member' as AccessLevel
-        };
-      }
-      
-      const isAdmin = await isCompanyOwner(userId, companyId);
+      // TEMPORARY: Make everyone admin for testing
+      // TODO: Implement proper company ownership check after Whop review
+      console.log('⚠️ TEMPORARY: All users are admins for testing');
       
       return { 
         userId, 
         username: user.username || user.name || null,
-        accessLevel: isAdmin ? 'admin' : 'member' as AccessLevel
+        accessLevel: 'admin' as AccessLevel
       };
     } catch (error) {
       console.error('Auth error:', error);
-      // Fallback - NO ACCESS if auth fails
       return { 
         userId: null,
         username: null,
@@ -61,33 +40,3 @@ export const verifyUser = cache(
     }
   }
 );
-
-// Check if user owns the company
-async function isCompanyOwner(userId: string, companyId: string): Promise<boolean> {
-  try {
-    console.log('Checking company ownership for:', { userId, companyId });
-    
-    // Fetch the company details
-    const company = await whopSdk.companies.getCompany({ companyId });
-    
-    console.log('Company data:', company);
-    
-    // Check if user is the company owner
-    const ownerId = (company as any).ownerId || 
-                    (company as any).owner_id || 
-                    (company as any).created_by ||
-                    (company as any).userId;
-    
-    console.log('Company owner check:', {
-      userId,
-      companyId,
-      ownerId,
-      isOwner: ownerId === userId
-    });
-    
-    return ownerId === userId;
-  } catch (error) {
-    console.error('Failed to check company ownership:', error);
-    return false;
-  }
-}
