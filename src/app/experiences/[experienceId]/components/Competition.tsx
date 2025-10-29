@@ -1,29 +1,76 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+
 export function Competition({ allTrades, experienceId }: { allTrades: any[]; experienceId: string }) {
-  // Calculate week dates
+  const [settings, setSettings] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load settings
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const res = await fetch(`/api/settings?experienceId=${experienceId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSettings(data.settings);
+        }
+      } catch (err) {
+        console.error('Failed to load competition settings:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadSettings();
+  }, [experienceId]);
+
+  // Don't show if disabled or still loading
+  if (loading) return null;
+  if (!settings?.competitionEnabled) return null;
+
+  const period = settings.competitionPeriod || 'weekly';
+  const title = settings.competitionTitle || 'Weekly Competition';
+  const prize = settings.competitionPrize || 'Top trader gets bragging rights! 🏆';
+
+  // Calculate period dates based on settings
   const now = new Date();
-  const dayOfWeek = now.getDay();
-  const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-  
-  const monday = new Date(now);
-  monday.setDate(diff);
-  monday.setHours(0, 0, 0, 0);
-  
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  sunday.setHours(23, 59, 59, 999);
-  
-  // Filter trades for this week
-  const weekTrades = allTrades.filter(trade => {
+  let startDate: Date;
+  let endDate: Date;
+  let periodLabel: string;
+
+  if (period === 'daily') {
+    startDate = new Date(now);
+    startDate.setHours(0, 0, 0, 0);
+    endDate = new Date(now);
+    endDate.setHours(23, 59, 59, 999);
+    periodLabel = 'Today';
+  } else if (period === 'monthly') {
+    startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    periodLabel = startDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  } else {
+    // Weekly (default)
+    const dayOfWeek = now.getDay();
+    const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+    startDate = new Date(now);
+    startDate.setDate(diff);
+    startDate.setHours(0, 0, 0, 0);
+    endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 6);
+    endDate.setHours(23, 59, 59, 999);
+    periodLabel = `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
+  }
+
+  // Filter trades for this period
+  const periodTrades = allTrades.filter(trade => {
     const tradeDate = new Date(trade.createdAt);
-    return tradeDate >= monday && tradeDate <= sunday;
+    return tradeDate >= startDate && tradeDate <= endDate;
   });
 
   // Calculate stats per trader
   const statsMap = new Map();
   
-  weekTrades.forEach((trade) => {
+  periodTrades.forEach((trade) => {
     if (!statsMap.has(trade.userId)) {
       statsMap.set(trade.userId, {
         userId: trade.userId,
@@ -52,38 +99,33 @@ export function Competition({ allTrades, experienceId }: { allTrades: any[]; exp
     }))
     .sort((a, b) => b.pnl - a.pnl);
 
-  const daysLeft = Math.ceil((sunday.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  const timeLeft = Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  const timeUnit = period === 'daily' ? 'hours' : 'days';
+  const timeValue = period === 'daily' 
+    ? Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60))
+    : timeLeft;
 
   return (
-    <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+    <div className="bg-gray-900 rounded-lg p-6 border border-gray-800 mb-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold">🏆 Weekly Competition</h2>
-          <p className="text-sm text-gray-400">
-            {monday.toLocaleDateString()} - {sunday.toLocaleDateString()}
-          </p>
+          <h2 className="text-2xl font-bold">🏆 {title}</h2>
+          <p className="text-sm text-gray-400">{periodLabel}</p>
         </div>
         <div className="text-right">
           <div className="text-sm text-gray-400">Ends in</div>
-          <div className="text-2xl font-bold text-yellow-400">{daysLeft} days</div>
+          <div className="text-2xl font-bold text-yellow-400">
+            {timeValue} {timeUnit}
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 p-4 rounded-lg text-center">
-          <div className="text-3xl mb-1">🥇</div>
-          <div className="text-sm text-white/80">#1 Prize</div>
-          <div className="text-xl font-bold text-white">$500</div>
-        </div>
-        <div className="bg-gradient-to-br from-gray-300 to-gray-400 p-4 rounded-lg text-center">
-          <div className="text-3xl mb-1">🥈</div>
-          <div className="text-sm text-white/80">#2 Prize</div>
-          <div className="text-xl font-bold text-white">$300</div>
-        </div>
-        <div className="bg-gradient-to-br from-orange-400 to-orange-500 p-4 rounded-lg text-center">
-          <div className="text-3xl mb-1">🥉</div>
-          <div className="text-sm text-white/80">#3 Prize</div>
-          <div className="text-xl font-bold text-white">$100</div>
+      {/* Prize Description */}
+      <div className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 border border-yellow-400/20 rounded-lg p-4 mb-6">
+        <div className="text-center">
+          <div className="text-3xl mb-2">🏆</div>
+          <div className="text-lg font-semibold text-yellow-400 mb-1">Prize</div>
+          <div className="text-white whitespace-pre-wrap">{prize}</div>
         </div>
       </div>
 
@@ -97,7 +139,7 @@ export function Competition({ allTrades, experienceId }: { allTrades: any[]; exp
           <div className="text-center py-8">
             <div className="text-4xl mb-2">🚀</div>
             <p className="text-gray-400">No entries yet. Be the first to compete!</p>
-            <p className="text-sm text-gray-500 mt-2">Post trades this week to enter</p>
+            <p className="text-sm text-gray-500 mt-2">Post trades this {period === 'daily' ? 'today' : period === 'monthly' ? 'month' : 'week'} to enter</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -149,7 +191,7 @@ export function Competition({ allTrades, experienceId }: { allTrades: any[]; exp
       <div className="mt-4 pt-4 border-t border-gray-800">
         <div className="flex items-center gap-2 text-sm text-gray-400">
           <span>💡</span>
-          <span>Top 3 traders win prizes! Competition resets every Monday.</span>
+          <span>Competition resets {period === 'daily' ? 'daily' : period === 'monthly' ? 'monthly' : 'weekly'}.</span>
         </div>
       </div>
     </div>
