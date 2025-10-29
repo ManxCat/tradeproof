@@ -26,7 +26,11 @@ export async function GET(request: NextRequest) {
       settings = (await db.insert(appSettings).values({
         id: nanoid(),
         experienceId,
-        minCancellationCharacters: 20
+        minCancellationCharacters: 20,
+        competitionEnabled: true,
+        competitionPeriod: 'weekly',
+        competitionTitle: 'Weekly Competition',
+        competitionPrize: 'Top trader gets bragging rights! 🏆'
       }).returning())[0];
     }
 
@@ -44,7 +48,14 @@ export async function GET(request: NextRequest) {
 // UPDATE settings
 export async function POST(request: NextRequest) {
   try {
-    const { experienceId, minCancellationCharacters } = await request.json();
+    const { 
+      experienceId, 
+      minCancellationCharacters,
+      competitionEnabled,
+      competitionPeriod,
+      competitionTitle,
+      competitionPrize
+    } = await request.json();
 
     if (!experienceId) {
       return NextResponse.json(
@@ -54,9 +65,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate min characters
-    if (minCancellationCharacters < 0 || minCancellationCharacters > 500) {
+    if (minCancellationCharacters !== undefined && 
+        (minCancellationCharacters < 0 || minCancellationCharacters > 500)) {
       return NextResponse.json(
         { error: 'Minimum characters must be between 0 and 500' },
+        { status: 400 }
+      );
+    }
+
+    // Validate competition period
+    if (competitionPeriod && !['daily', 'weekly', 'monthly'].includes(competitionPeriod)) {
+      return NextResponse.json(
+        { error: 'Competition period must be daily, weekly, or monthly' },
         { status: 400 }
       );
     }
@@ -66,22 +86,34 @@ export async function POST(request: NextRequest) {
       where: eq(appSettings.experienceId, experienceId)
     });
 
+    // Build update object with only provided fields
+    const updateData: any = {
+      updatedAt: new Date()
+    };
+    
+    if (minCancellationCharacters !== undefined) updateData.minCancellationCharacters = minCancellationCharacters;
+    if (competitionEnabled !== undefined) updateData.competitionEnabled = competitionEnabled;
+    if (competitionPeriod !== undefined) updateData.competitionPeriod = competitionPeriod;
+    if (competitionTitle !== undefined) updateData.competitionTitle = competitionTitle;
+    if (competitionPrize !== undefined) updateData.competitionPrize = competitionPrize;
+
     let settings;
     if (existing) {
       // Update
       settings = (await db.update(appSettings)
-        .set({ 
-          minCancellationCharacters,
-          updatedAt: new Date()
-        })
+        .set(updateData)
         .where(eq(appSettings.experienceId, experienceId))
         .returning())[0];
     } else {
-      // Create
+      // Create with defaults
       settings = (await db.insert(appSettings).values({
         id: nanoid(),
         experienceId,
-        minCancellationCharacters
+        minCancellationCharacters: minCancellationCharacters ?? 20,
+        competitionEnabled: competitionEnabled ?? true,
+        competitionPeriod: competitionPeriod ?? 'weekly',
+        competitionTitle: competitionTitle ?? 'Weekly Competition',
+        competitionPrize: competitionPrize ?? 'Top trader gets bragging rights! 🏆'
       }).returning())[0];
     }
 

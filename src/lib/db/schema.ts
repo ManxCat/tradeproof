@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, timestamp, boolean } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 // Helper for timestamps
@@ -33,11 +33,20 @@ export const trades = pgTable('trades', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-// App settings table (NEW - for cancellation feature)
+// App settings table - includes cancellation AND competition settings
 export const appSettings = pgTable('app_settings', {
   id: text('id').primaryKey(),
   experienceId: text('experience_id').notNull().unique(),
+  
+  // Cancellation settings
   minCancellationCharacters: integer('min_cancellation_characters').notNull().default(20),
+  
+  // Competition settings
+  competitionEnabled: boolean('competition_enabled').notNull().default(true),
+  competitionPeriod: text('competition_period').notNull().default('weekly'), // 'daily', 'weekly', 'monthly'
+  competitionTitle: text('competition_title').default('Weekly Competition'),
+  competitionPrize: text('competition_prize').default('Top trader gets bragging rights! 🏆'),
+  
   ...timestamps,
 });
 
