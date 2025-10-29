@@ -21,19 +21,25 @@ export const verifyUser = cache(
       // Fetch user details
       const user = await whopSdk.users.getUser({ userId });
       
-      // Check user's access level for this experience
-      const accessCheck = await whopSdk.users.checkAccess(
-        experienceId,
-        { id: userId }
+      // Check access using REST API directly
+      const accessResponse = await fetch(
+        `https://api.whop.com/api/v5/me/has_access/${experienceId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${process.env.WHOP_API_KEY}`,
+          }
+        }
       );
       
-      console.log('🔐 Access check result:', accessCheck);
+      const accessData = await accessResponse.json();
+      
+      console.log('🔐 Access check result:', accessData);
       
       // Map Whop access levels to our access levels
       let accessLevel: AccessLevel;
-      if (accessCheck.access_level === 'admin') {
+      if (accessData.access_level === 'admin') {
         accessLevel = 'admin';
-      } else if (accessCheck.access_level === 'customer') {
+      } else if (accessData.access_level === 'customer') {
         accessLevel = 'member';
       } else {
         accessLevel = 'no_access';
