@@ -15,21 +15,29 @@ export const verifyUser = cache(
     try {
       const headersList = await headers();
       
+      // Get the user token from headers
+      const userToken = headersList.get('x-whop-user-token');
+      
       // Get userId from Whop token in headers
       const { userId } = await whopSdk.verifyUserToken(headersList);
       
       // Fetch user details
       const user = await whopSdk.users.getUser({ userId });
       
-      // Check access using REST API directly
+      // Check access using the user's token
       const accessResponse = await fetch(
         `https://api.whop.com/api/v5/me/has_access/${experienceId}`,
         {
           headers: {
-            'Authorization': `Bearer ${process.env.WHOP_API_KEY}`,
+            'Authorization': `Bearer ${userToken}`,
           }
         }
       );
+      
+      if (!accessResponse.ok) {
+        console.error('Access check failed:', accessResponse.status, accessResponse.statusText);
+        throw new Error('Failed to check access');
+      }
       
       const accessData = await accessResponse.json();
       
@@ -52,6 +60,7 @@ export const verifyUser = cache(
       };
     } catch (error) {
       console.error('Auth error:', error);
+      // Fallback to member access if check fails
       return { 
         userId: null,
         username: null,
