@@ -184,7 +184,7 @@ export default async function ExperiencePage({
           />
         </div>
 
-        <Competition experienceId={experienceId} leaderboardData={leaderboardData} />
+        <Competition experienceId={experienceId} allTrades={approvedTrades} />
 
         <LeaderboardTabs 
           experienceId={experienceId}
