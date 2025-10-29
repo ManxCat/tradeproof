@@ -49,7 +49,7 @@ export const verifyUser = cache(
 async function isExperienceOwner(userId: string, experienceId: string): Promise<boolean> {
   try {
     // Fetch the experience details
-    const experience = await whopSdk.experiences.getExperience({ id: experienceId });
+    const experience = await whopSdk.experiences.getExperience({ experienceId });
     
     console.log('Experience data:', experience);
     
