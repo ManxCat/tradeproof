@@ -25,8 +25,13 @@ export const verifyUser = cache(
       
       console.log('Got user details:', user);
       
-      // Check if user is the experience owner
-      const isAdmin = await isExperienceOwner(userId, experienceId);
+      // Fetch experience to get company ID
+      const experience = await whopSdk.experiences.getExperience({ experienceId });
+      
+      console.log('Experience data:', experience);
+      
+      // Check if user owns the company that this experience belongs to
+      const isAdmin = await isCompanyOwner(userId, experience.companyId);
       
       return { 
         userId, 
@@ -45,30 +50,30 @@ export const verifyUser = cache(
   }
 );
 
-// Check if user owns the experience
-async function isExperienceOwner(userId: string, experienceId: string): Promise<boolean> {
+// Check if user owns the company
+async function isCompanyOwner(userId: string, companyId: string): Promise<boolean> {
   try {
-    // Fetch the experience details
-    const experience = await whopSdk.experiences.getExperience({ experienceId });
+    // Fetch the company details
+    const company = await whopSdk.companies.getCompany({ companyId });
     
-    console.log('Experience data:', experience);
+    console.log('Company data:', company);
     
-    // Try different possible owner field names
-    const ownerId = (experience as any).ownerId || 
-                    (experience as any).owner_id || 
-                    (experience as any).created_by ||
-                    (experience as any).userId;
+    // Check if user is the company owner
+    const ownerId = (company as any).ownerId || 
+                    (company as any).owner_id || 
+                    (company as any).created_by ||
+                    (company as any).userId;
     
-    console.log('Experience owner check:', {
+    console.log('Company owner check:', {
       userId,
+      companyId,
       ownerId,
       isOwner: ownerId === userId
     });
     
     return ownerId === userId;
   } catch (error) {
-    console.error('Failed to check experience ownership:', error);
-    // If we can't verify, assume they're not admin (safe default)
+    console.error('Failed to check company ownership:', error);
     return false;
   }
 }
