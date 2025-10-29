@@ -7,11 +7,15 @@ import { redirect } from 'next/navigation';
 import { nanoid } from 'nanoid';
 
 export async function submitTrade(formData: FormData, experienceId: string) {
-  // Verify user and get their info
-  const { userId, username } = await verifyUser({ 
-    experienceId,
-    requiredAccess: 'admin' 
+  // Verify user and get their info (members can submit trades)
+  const { userId, username, accessLevel } = await verifyUser({ 
+    experienceId
   });
+
+  // Block if no access
+  if (accessLevel === 'no_access' || !userId) {
+    throw new Error('Authentication required to submit trades');
+  }
 
   // Get form data
   const symbol = formData.get('symbol') as string;
@@ -44,7 +48,7 @@ export async function submitTrade(formData: FormData, experienceId: string) {
     id: nanoid(),
     experienceId,
     userId,
-    username: username || null,
+    username: username || 'Anonymous',  // ✅ Provide fallback instead of null
     symbol,
     positionType,
     assetType,
@@ -54,7 +58,7 @@ export async function submitTrade(formData: FormData, experienceId: string) {
     positionSize: positionSize.toString(),
     pnl: pnl.toString(),
     roi: roi.toString(),
-    status: 'pending',
+    status: 'pending',  // ✅ Trades start as pending
     screenshot: null,
   });
 
