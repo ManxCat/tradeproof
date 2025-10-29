@@ -31,7 +31,7 @@ export const verifyUser = cache(
       console.log('Experience data:', experience);
       
       // Check if user owns the company that this experience belongs to
-      const isAdmin = await isCompanyOwner(userId, experience.companyId);
+      const isAdmin = await isCompanyOwner(userId, experience.company.id);
       
       return { 
         userId, 
