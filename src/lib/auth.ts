@@ -15,43 +15,20 @@ export const verifyUser = cache(
     try {
       const headersList = await headers();
       
-      // Get the user token from headers
-      const userToken = headersList.get('x-whop-user-token');
-      
-      // Get userId from Whop token in headers
+      // Get userId from Whop token
       const { userId } = await whopSdk.verifyUserToken(headersList);
       
       // Fetch user details
       const user = await whopSdk.users.getUser({ userId });
       
-      // Check access using the user's token
-      const accessResponse = await fetch(
-        `https://api.whop.com/api/v5/me/has_access/${experienceId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${userToken}`,
-          }
-        }
-      );
+      // TODO: Implement proper access level checking
+      // The Whop SDK docs mention users.checkAccess() but this method
+      // is not available in @whop-apps/sdk version 0.0.1-canary.117
+      // REST API endpoint /api/v5/me/has_access/ returns empty responses
+      // Seeking guidance from Whop on the correct implementation
       
-      if (!accessResponse.ok) {
-        console.error('Access check failed:', accessResponse.status, accessResponse.statusText);
-        throw new Error('Failed to check access');
-      }
-      
-      const accessData = await accessResponse.json();
-      
-      console.log('🔐 Access check result:', accessData);
-      
-      // Map Whop access levels to our access levels
-      let accessLevel: AccessLevel;
-      if (accessData.access_level === 'admin') {
-        accessLevel = 'admin';
-      } else if (accessData.access_level === 'customer') {
-        accessLevel = 'member';
-      } else {
-        accessLevel = 'no_access';
-      }
+      // TEMPORARY: All authenticated users are admins
+      const accessLevel: AccessLevel = 'admin';
       
       return { 
         userId, 
@@ -60,7 +37,6 @@ export const verifyUser = cache(
       };
     } catch (error) {
       console.error('Auth error:', error);
-      // Fallback to member access if check fails
       return { 
         userId: null,
         username: null,
