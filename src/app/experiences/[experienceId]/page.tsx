@@ -126,7 +126,9 @@ export default async function ExperiencePage({
           <div className="flex gap-2">
             <a
               href={`/experiences/${experienceId}`}
-              className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 text-sm"
+              className={`px-4 py-2 rounded-lg text-sm ${
+                !view ? 'bg-blue-600 text-white' : 'bg-gray-800 hover:bg-gray-700'
+              }`}
             >
               Dashboard
             </a>
@@ -134,13 +136,17 @@ export default async function ExperiencePage({
               <>
                 <a
                   href={`/experiences/${experienceId}?view=admin`}
-                  className="px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 text-sm"
+                  className={`px-4 py-2 rounded-lg text-sm ${
+                    view === 'admin' ? 'bg-blue-600 text-white' : 'bg-gray-800 hover:bg-gray-700'
+                  }`}
                 >
                   Admin
                 </a>
                 <a
                   href={`/experiences/${experienceId}?view=settings`}
-                  className="px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 text-sm"
+                  className={`px-4 py-2 rounded-lg text-sm ${
+                    view === 'settings' ? 'bg-blue-600 text-white' : 'bg-gray-800 hover:bg-gray-700'
+                  }`}
                 >
                   Settings
                 </a>
@@ -186,10 +192,10 @@ export default async function ExperiencePage({
 
         <Competition experienceId={experienceId} allTrades={approvedTrades} />
 
-       <LeaderboardTabs 
-  experienceId={experienceId}
-  data={leaderboardData}
-/>
+        <LeaderboardTabs 
+          experienceId={experienceId}
+          data={leaderboardData}
+        />
 
         <a 
           href={`/experiences/${experienceId}/post-trade`}
