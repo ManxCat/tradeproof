@@ -18,13 +18,26 @@ export const verifyUser = cache(
       // Get userId from Whop token in headers
       const { userId } = await whopSdk.verifyUserToken(headersList);
       
+      console.log('🔍 User ID:', userId);
+      
       // Fetch user details
       const user = await whopSdk.users.getUser({ userId });
       
-      // TEMPORARY: Make everyone admin for testing
-      // TODO: Implement proper company ownership check after Whop review
-      console.log('⚠️ TEMPORARY: All users are admins for testing');
+      // Fetch experience to get company ID
+      const experience = await whopSdk.experiences.getExperience({ experienceId });
       
+      console.log('📦 FULL EXPERIENCE OBJECT:', JSON.stringify(experience, null, 2));
+      console.log('🏢 FULL COMPANY OBJECT:', JSON.stringify(experience.company, null, 2));
+      
+      // Try to fetch company details
+      try {
+        const company = await whopSdk.companies.getCompany({ companyId: experience.company.id });
+        console.log('🏭 FULL COMPANY DETAILS:', JSON.stringify(company, null, 2));
+      } catch (err) {
+        console.error('Failed to fetch company:', err);
+      }
+      
+      // For now, make everyone admin
       return { 
         userId, 
         username: user.username || user.name || null,
