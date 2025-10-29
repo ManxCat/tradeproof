@@ -127,10 +127,7 @@ export default async function ExperiencePage({
           
           {/* Navigation Tabs */}
           <div className="flex flex-col gap-2">
-            {/* DEBUG INFO */}
-            <div className="text-xs text-gray-500 bg-gray-800 px-3 py-1 rounded">
-              Access: <span className="text-yellow-400">{accessLevel}</span> | User: <span className="text-blue-400">{userId || 'null'}</span>
-            </div>
+           
             
             <div className="flex gap-2">
               <a
