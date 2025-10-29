@@ -63,5 +63,5 @@ export async function submitTrade(formData: FormData, experienceId: string) {
   });
 
   // Redirect back to leaderboard
-  redirect(`/experiences/${experienceId}`);
+  redirect(`/experiences/${experienceId}/post-trade?success=true`);
 }

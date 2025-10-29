@@ -3,19 +3,41 @@ import { submitTrade } from './actions';
 
 export default async function PostTradePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ experienceId: string }>;
+  searchParams: Promise<{ success?: string }>;
 }) {
   const { experienceId } = await params;
-  const { userId, accessLevel } = await verifyUser({ 
-    experienceId,
-    requiredAccess: 'admin' 
-  });
+  const search = await searchParams;
+  
+  // Allow both members and admins to access this page
+  const { userId, accessLevel } = await verifyUser({ experienceId });
+
+  // Block if no access
+  if (accessLevel === 'no_access' || !userId) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-white p-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-red-900/50 text-red-400 p-4 rounded-lg">
+            Please log in to submit trades.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-8">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-4xl font-bold mb-8">Post New Trade</h1>
+        
+        {/* Success message after submission */}
+        {search.success === 'true' && (
+          <div className="bg-green-900/50 text-green-400 p-4 rounded-lg mb-6">
+            ✅ Your trade has been submitted and is pending admin approval.
+          </div>
+        )}
         
         <form action={async (formData) => {
           'use server';
