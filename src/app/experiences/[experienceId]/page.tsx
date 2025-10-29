@@ -6,17 +6,55 @@ import { Leaderboard } from './components/Leaderboard';
 import { StatCard } from './components/StatCard';
 import { Competition } from './components/Competition';
 import { LeaderboardTabs } from './components/LeaderboardTabs';
+import AdminView from './admin/page';
+import SettingsClient from './settings/settings-client';
 
 export default async function ExperiencePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ experienceId: string }>;
+  searchParams: Promise<{ view?: string }>;
 }) {
   const { experienceId } = await params;
+  const { view } = await searchParams;
   
   // This handles authentication and returns user data - ALL SERVER-SIDE
   const { userId, accessLevel } = await verifyUser({ experienceId });
 
+  // Show admin view if requested and user is admin
+  if (view === 'admin') {
+    if (accessLevel !== 'admin') {
+      return (
+        <div className="min-h-screen bg-gray-950 text-white p-6">
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-red-900/50 text-red-400 p-4 rounded-lg">
+              ⛔ Access Denied: Only experience owners can access the admin panel.
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return <AdminView params={Promise.resolve({ experienceId })} />;
+  }
+
+  // Show settings view if requested and user is admin
+  if (view === 'settings') {
+    if (accessLevel !== 'admin') {
+      return (
+        <div className="min-h-screen bg-gray-950 text-white p-6">
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-red-900/50 text-red-400 p-4 rounded-lg">
+              ⛔ Access Denied: Only experience owners can access settings.
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return <SettingsClient experienceId={experienceId} />;
+  }
+
+  // Default: Show dashboard
   // Load all trades - SERVER-SIDE
   const allTrades = await db
     .select()
@@ -78,8 +116,38 @@ export default async function ExperiencePage({
   return (
     <div className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-bold mb-2">TradeProof Dashboard</h1>
-        <p className="text-gray-400 mb-6 md:mb-8">Track your community's trading performance</p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">TradeProof Dashboard</h1>
+            <p className="text-gray-400">Track your community's trading performance</p>
+          </div>
+          
+          {/* Navigation Tabs */}
+          <div className="flex gap-2">
+            <a
+              href={`/experiences/${experienceId}`}
+              className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 text-sm"
+            >
+              Dashboard
+            </a>
+            {accessLevel === 'admin' && (
+              <>
+                <a
+                  href={`/experiences/${experienceId}?view=admin`}
+                  className="px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 text-sm"
+                >
+                  Admin
+                </a>
+                <a
+                  href={`/experiences/${experienceId}?view=settings`}
+                  className="px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 text-sm"
+                >
+                  Settings
+                </a>
+              </>
+            )}
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 md:mb-8">
           <StatCard
@@ -100,54 +168,43 @@ export default async function ExperiencePage({
           />
           
           <StatCard
-            icon="🎯"
-            label="Community Win Rate"
+            icon="📈"
+            label="Win Rate"
             value={`${avgWinRate.toFixed(1)}%`}
-            subtitle={`${winningTrades}W / ${totalTrades - winningTrades}L`}
-            trend={avgWinRate >= 50 ? 'up' : avgWinRate > 0 ? 'down' : 'neutral'}
-            color={avgWinRate >= 50 ? 'green' : 'yellow'}
+            subtitle={`${winningTrades}/${totalTrades} wins`}
+            color="purple"
           />
           
           <StatCard
-            icon="👑"
+            icon="🏆"
             label="Top Trader"
-            value={bestTrader ? `$${bestTrader.totalPnl.toFixed(0)}` : 'N/A'}
-            subtitle={bestTrader ? (bestTrader.username || `Trader #${bestTrader.userId.slice(-6)}`) : 'No traders yet'}
-            color="purple"
+            value={bestTrader?.username || 'None'}
+            subtitle={bestTrader ? `$${bestTrader.totalPnl >= 0 ? '+' : ''}${bestTrader.totalPnl.toFixed(2)}` : 'No trades yet'}
+            color="yellow"
           />
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-6 md:mb-8">
-          <a 
-            href={`/experiences/${experienceId}/post-trade`}
-            className="inline-block text-center bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg font-semibold"
-          >
-            Post New Trade
-          </a>
-          
-          <a 
-            href={`/experiences/${experienceId}/admin`}
-            className="inline-block text-center bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold"
-          >
-            🔒 Admin Dashboard
-          </a>
-        </div>
+        <Competition experienceId={experienceId} leaderboardData={leaderboardData} />
 
-        <div className="mb-6 md:mb-8">
-          <Competition allTrades={allTrades} experienceId={experienceId} />
-        </div>
+        <LeaderboardTabs 
+          experienceId={experienceId}
+          leaderboardData={leaderboardData}
+        />
 
-        <div className="mb-6 md:mb-8">
-          <LeaderboardTabs data={leaderboardData} experienceId={experienceId} />
-        </div>
+        <a 
+          href={`/experiences/${experienceId}/post-trade`}
+          className="fixed bottom-6 right-6 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full shadow-lg font-semibold flex items-center gap-2"
+        >
+          + Post New Trade
+        </a>
 
-        <div className="bg-gray-900 rounded-lg p-4 md:p-6">
+        <div className="bg-gray-900 rounded-lg p-4 md:p-6 mt-6 md:mt-8">
           <h2 className="text-xl md:text-2xl font-bold mb-4">Recent Trades</h2>
           
           {approvedTrades.length === 0 ? (
-            <p className="text-gray-400">No trades yet. Be the first to post!</p>
+            <p className="text-gray-400 text-center py-8">No approved trades yet. Be the first to post!</p>
           ) : (
-            <div className="space-y-3 md:space-y-4">
+            <div className="space-y-3">
               {approvedTrades.slice(0, 10).map((trade) => {
                 const tradePnl = parseFloat(trade.pnl);
                 const tradeRoi = parseFloat(trade.roi);
