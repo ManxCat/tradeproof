@@ -23,25 +23,37 @@ export const verifyUser = cache(
       // Fetch user details
       const user = await whopSdk.users.getUser({ userId });
       
-      // Fetch experience to get company ID
+      console.log('👤 User data:', JSON.stringify(user, null, 2));
+      
+      // Get user's memberships to check their role
+      const memberships = await whopSdk.memberships.getUserMemberships({ userId });
+      
+      console.log('📋 All memberships:', JSON.stringify(memberships, null, 2));
+      
+      // Find membership for this experience's company
       const experience = await whopSdk.experiences.getExperience({ experienceId });
+      const companyId = experience.company.id;
       
-      console.log('📦 FULL EXPERIENCE OBJECT:', JSON.stringify(experience, null, 2));
-      console.log('🏢 FULL COMPANY OBJECT:', JSON.stringify(experience.company, null, 2));
+      const relevantMembership = memberships.data?.find((m: any) => 
+        m.product?.companyId === companyId || 
+        m.companyId === companyId
+      );
       
-      // Try to fetch company details
-      try {
-        const company = await whopSdk.companies.getCompany({ companyId: experience.company.id });
-        console.log('🏭 FULL COMPANY DETAILS:', JSON.stringify(company, null, 2));
-      } catch (err) {
-        console.error('Failed to fetch company:', err);
-      }
+      console.log('🎫 Relevant membership:', JSON.stringify(relevantMembership, null, 2));
       
-      // For now, make everyone admin
+      // Check if user has admin/owner role
+      const role = (relevantMembership as any)?.role || 
+                   (relevantMembership as any)?.access_level ||
+                   'member';
+      
+      console.log('👔 User role:', role);
+      
+      const isAdmin = role === 'owner' || role === 'admin';
+      
       return { 
         userId, 
         username: user.username || user.name || null,
-        accessLevel: 'admin' as AccessLevel
+        accessLevel: isAdmin ? 'admin' : 'member' as AccessLevel
       };
     } catch (error) {
       console.error('Auth error:', error);
