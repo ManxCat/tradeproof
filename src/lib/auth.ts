@@ -25,19 +25,50 @@ export const verifyUser = cache(
       
       console.log('Got user details:', user);
       
+      // Check if user is the experience owner
+      const isAdmin = await isExperienceOwner(userId, experienceId);
+      
       return { 
         userId, 
         username: user.username || user.name || null,
-        accessLevel: 'admin' as AccessLevel 
+        accessLevel: isAdmin ? 'admin' : 'member' as AccessLevel
       };
     } catch (error) {
       console.error('Auth error:', error);
-      // Fallback for testing
+      // Fallback - NO ACCESS if auth fails
       return { 
-        userId: `fallback-${Date.now()}`,
+        userId: null,
         username: null,
-        accessLevel: 'admin' as AccessLevel 
+        accessLevel: 'no_access' as AccessLevel
       };
     }
   }
 );
+
+// Check if user owns the experience
+async function isExperienceOwner(userId: string, experienceId: string): Promise<boolean> {
+  try {
+    // Fetch the experience details
+    const experience = await whopSdk.experiences.getExperience({ id: experienceId });
+    
+    console.log('Experience data:', experience);
+    
+    // Try different possible owner field names
+    const ownerId = (experience as any).ownerId || 
+                    (experience as any).owner_id || 
+                    (experience as any).created_by ||
+                    (experience as any).userId;
+    
+    console.log('Experience owner check:', {
+      userId,
+      ownerId,
+      isOwner: ownerId === userId
+    });
+    
+    return ownerId === userId;
+  } catch (error) {
+    console.error('Failed to check experience ownership:', error);
+    // If we can't verify, assume they're not admin (safe default)
+    return false;
+  }
+}
