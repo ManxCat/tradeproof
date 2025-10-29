@@ -26,12 +26,24 @@ export const verifyUser = cache(
       console.log('Got user details:', user);
       
       // Fetch experience to get company ID
+      console.log('Fetching experience...');
       const experience = await whopSdk.experiences.getExperience({ experienceId });
       
       console.log('Experience data:', experience);
+      console.log('Company ID from experience:', experience?.company?.id);
       
       // Check if user owns the company that this experience belongs to
-      const isAdmin = await isCompanyOwner(userId, experience.company.id);
+      const companyId = experience?.company?.id;
+      if (!companyId) {
+        console.error('No company ID found in experience');
+        return { 
+          userId, 
+          username: user.username || user.name || null,
+          accessLevel: 'member' as AccessLevel
+        };
+      }
+      
+      const isAdmin = await isCompanyOwner(userId, companyId);
       
       return { 
         userId, 
@@ -53,6 +65,8 @@ export const verifyUser = cache(
 // Check if user owns the company
 async function isCompanyOwner(userId: string, companyId: string): Promise<boolean> {
   try {
+    console.log('Checking company ownership for:', { userId, companyId });
+    
     // Fetch the company details
     const company = await whopSdk.companies.getCompany({ companyId });
     
