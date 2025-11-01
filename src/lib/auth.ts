@@ -33,7 +33,7 @@ export const verifyUser = cache(
         id: userId 
       });
       
-      console.log('🔐 Access check result:', accessCheck);
+     
       
       // Map Whop access levels
       let accessLevel: AccessLevel;

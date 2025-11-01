@@ -23,7 +23,6 @@ export default async function ExperiencePage({
   const { userId, accessLevel } = await verifyUser({ experienceId });
 
   // DEBUG: Log auth status
-  console.log('🔍 AUTH DEBUG:', { userId, accessLevel, experienceId });
 
   // Show admin view if requested and user is admin
   if (view === 'admin') {
