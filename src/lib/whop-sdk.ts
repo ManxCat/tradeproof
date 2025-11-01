@@ -1,8 +1,6 @@
-import { WhopServerSdk } from "@whop/api";
+import Whop from '@whop/sdk';
 
-export const whopSdk = WhopServerSdk({
-  appId: process.env.NEXT_PUBLIC_WHOP_APP_ID!,
-  appApiKey: process.env.WHOP_API_KEY!,
-  onBehalfOfUserId: process.env.NEXT_PUBLIC_WHOP_AGENT_USER_ID,
-  companyId: process.env.NEXT_PUBLIC_WHOP_COMPANY_ID,
+export const whopSdk = new Whop({
+  appID: process.env.WHOP_APP_ID!,
+  apiKey: process.env.WHOP_API_KEY!,
 });

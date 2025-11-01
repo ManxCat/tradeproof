@@ -16,19 +16,41 @@ export const verifyUser = cache(
       const headersList = await headers();
       
       // Get userId from Whop token
-      const { userId } = await whopSdk.verifyUserToken(headersList);
+      const userTokenHeader = headersList.get('x-whop-user-token');
+      if (!userTokenHeader) {
+        throw new Error('No user token found');
+      }
       
-      // Fetch user details
-      const user = await whopSdk.users.getUser({ userId });
+      // Decode the JWT to get userId (simple base64 decode of payload)
+      const payload = JSON.parse(
+        Buffer.from(userTokenHeader.split('.')[1], 'base64').toString()
+      );
+      const userId = payload.sub;
       
-      // TODO: Implement proper access level checking
-      // The Whop SDK docs mention users.checkAccess() but this method
-      // is not available in @whop-apps/sdk version 0.0.1-canary.117
-      // REST API endpoint /api/v5/me/has_access/ returns empty responses
-      // Seeking guidance from Whop on the correct implementation
+      // Check access using the correct SDK
+      const accessCheck = await whopSdk.users.checkAccess(experienceId, { 
+        id: userId 
+      });
       
-      // TEMPORARY: All authenticated users are admins
-      const accessLevel: AccessLevel = 'admin';
+      console.log('🔐 Access check result:', accessCheck);
+      
+      // Map Whop access levels to our access levels
+      let accessLevel: AccessLevel;
+      if (accessCheck.access_level === 'admin') {
+        accessLevel = 'admin';
+      } else if (accessCheck.access_level === 'customer') {
+        accessLevel = 'member';
+      } else {
+        accessLevel = 'no_access';
+      }
+      
+      // Get user details for username
+      const userResponse = await fetch(`https://api.whop.com/api/v5/users/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${process.env.WHOP_API_KEY}`,
+        }
+      });
+      const user = await userResponse.json();
       
       return { 
         userId, 
