@@ -21,20 +21,21 @@ export const verifyUser = cache(
         throw new Error('No user token found');
       }
       
-      // Decode the JWT to get userId (simple base64 decode of payload)
+      // Decode the JWT to get userId and username
       const payload = JSON.parse(
         Buffer.from(userTokenHeader.split('.')[1], 'base64').toString()
       );
       const userId = payload.sub;
+      const username = payload.username || null;
       
-      // Check access using the correct SDK
+      // Check access using the SDK
       const accessCheck = await whopSdk.users.checkAccess(experienceId, { 
         id: userId 
       });
       
       console.log('🔐 Access check result:', accessCheck);
       
-      // Map Whop access levels to our access levels
+      // Map Whop access levels
       let accessLevel: AccessLevel;
       if (accessCheck.access_level === 'admin') {
         accessLevel = 'admin';
@@ -44,17 +45,9 @@ export const verifyUser = cache(
         accessLevel = 'no_access';
       }
       
-      // Get user details for username
-      const userResponse = await fetch(`https://api.whop.com/api/v5/users/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${process.env.WHOP_API_KEY}`,
-        }
-      });
-      const user = await userResponse.json();
-      
       return { 
         userId, 
-        username: user.username || user.name || null,
+        username,
         accessLevel
       };
     } catch (error) {
